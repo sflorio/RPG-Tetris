@@ -1,0 +1,222 @@
+[gd_scene load_steps=12 format=3 uid="uid://d3korpfrgseif"]
+
+[ext_resource type="Script" path="res://scr/Grid.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://c28wciyag1k4p" path="res://spr/button.png" id="2"]
+[ext_resource type="Script" path="res://scr/NextPieces.gd" id="3"]
+[ext_resource type="Script" path="res://scr/Main.gd" id="4"]
+[ext_resource type="Script" path="res://scr/Hold.gd" id="6"]
+[ext_resource type="Texture2D" uid="uid://bmkr2i2afgq4f" path="res://spr/holdPiece.png" id="7"]
+[ext_resource type="Texture2D" uid="uid://0sifyyptxqvw" path="res://spr/nextPiece.png" id="8"]
+[ext_resource type="Texture2D" uid="uid://dsdhsn18wdlr6" path="res://spr/grid.png" id="9"]
+[ext_resource type="FontFile" path="res://fonts/UniFont.tres" id="10"]
+[ext_resource type="AudioStream" uid="uid://dtj161d601ncu" path="res://audio/Tetris.wav" id="11"]
+[ext_resource type="Texture2D" uid="uid://bqrfbg57op0jf" path="res://spr/russia.png" id="12"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("4")
+
+[node name="Grid" type="Node2D" parent="."]
+z_index = 1
+script = ExtResource("1")
+
+[node name="UI" type="Control" parent="Grid"]
+show_behind_parent = true
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Hold" type="Control" parent="Grid/UI"]
+anchors_preset = 0
+offset_left = 14.0
+offset_top = 117.0
+offset_right = 120.0
+offset_bottom = 227.0
+script = ExtResource("6")
+
+[node name="Label" type="Label" parent="Grid/UI/Hold"]
+layout_mode = 0
+offset_top = 114.0
+offset_right = 104.0
+offset_bottom = 130.0
+theme_override_fonts/font = ExtResource("10")
+text = "Hold"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Grid/UI/Hold"]
+show_behind_parent = true
+layout_mode = 0
+offset_top = 4.0
+offset_right = 26.0
+offset_bottom = 30.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(4, 4)
+texture = ExtResource("7")
+
+[node name="NextPieces" type="Control" parent="Grid/UI"]
+anchors_preset = 0
+offset_left = 484.963
+offset_top = 72.0892
+offset_right = 591.963
+offset_bottom = 599.089
+script = ExtResource("3")
+
+[node name="Label" type="Label" parent="Grid/UI/NextPieces"]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 530.0
+offset_right = 105.0
+offset_bottom = 546.0
+theme_override_fonts/font = ExtResource("10")
+text = "Next"
+horizontal_alignment = 1
+
+[node name="NextSprite" type="TextureRect" parent="Grid/UI/NextPieces"]
+layout_mode = 0
+offset_right = 26.0
+offset_bottom = 130.0
+scale = Vector2(4, 4)
+texture = ExtResource("8")
+
+[node name="Score" type="Control" parent="Grid/UI"]
+anchors_preset = 0
+offset_right = 202.0
+offset_bottom = 40.0
+
+[node name="ScoreText" type="Label" parent="Grid/UI/Score"]
+layout_mode = 0
+offset_left = 11.1203
+offset_right = 65.1203
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("10")
+text = "SCORE:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoreNumber" type="Label" parent="Grid/UI/Score"]
+layout_mode = 0
+offset_left = 64.0
+offset_right = 147.0
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("10")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Grid/UI/Score"]
+show_behind_parent = true
+layout_mode = 0
+offset_right = 51.0
+offset_bottom = 12.0
+scale = Vector2(3, 3)
+texture = ExtResource("2")
+expand_mode = 1
+
+[node name="Level" type="Control" parent="Grid/UI"]
+anchors_preset = 0
+offset_left = 498.0
+offset_right = 601.0
+offset_bottom = 40.0
+
+[node name="LevelText" type="Label" parent="Grid/UI/Level"]
+layout_mode = 0
+anchor_right = 5.0
+offset_left = -39.0
+offset_right = -410.0
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("10")
+text = "LEVEL:"
+vertical_alignment = 1
+
+[node name="LevelNumber" type="Label" parent="Grid/UI/Level"]
+layout_mode = 0
+offset_left = 17.0
+offset_right = 96.0
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("10")
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Grid/UI/Level"]
+show_behind_parent = true
+layout_mode = 0
+offset_left = -50.0
+offset_right = 1.0
+offset_bottom = 12.0
+scale = Vector2(3, 3)
+texture = ExtResource("2")
+expand_mode = 1
+
+[node name="Lines" type="Control" parent="Grid/UI"]
+anchors_preset = 0
+offset_left = 478.0
+offset_top = 760.0
+offset_right = 601.0
+offset_bottom = 800.0
+
+[node name="LinesText" type="Label" parent="Grid/UI/Lines"]
+layout_mode = 0
+offset_left = 9.10788
+offset_top = 4.18677
+offset_right = 85.1079
+offset_bottom = 42.1868
+theme_override_fonts/font = ExtResource("10")
+text = "LINES:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LinesNumber" type="Label" parent="Grid/UI/Lines"]
+layout_mode = 0
+offset_left = 63.0
+offset_top = 4.0
+offset_right = 119.0
+offset_bottom = 42.0
+theme_override_fonts/font = ExtResource("10")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sprite2D" type="TextureRect" parent="Grid/UI/Lines"]
+show_behind_parent = true
+layout_mode = 0
+offset_left = -12.5654
+offset_top = -148.691
+offset_right = 35.4346
+offset_bottom = -85.6908
+scale = Vector2(3, 3)
+texture = ExtResource("12")
+
+[node name="Background" type="ColorRect" parent="Grid/UI"]
+show_behind_parent = true
+layout_mode = 0
+offset_right = 600.0
+offset_bottom = 821.0
+color = Color(0.0431373, 0.0392157, 0.0901961, 1)
+metadata/_edit_lock_ = true
+
+[node name="GridBackground" type="ColorRect" parent="Grid/UI"]
+light_mask = 0
+layout_mode = 0
+offset_left = 139.0
+offset_top = 74.0
+offset_right = 461.0
+offset_bottom = 736.0
+color = Color(0, 0, 0, 1)
+
+[node name="Border" type="Sprite2D" parent="Grid/UI"]
+position = Vector2(130.914, 61.4567)
+scale = Vector2(4.26807, 4.10658)
+texture = ExtResource("9")
+centered = false
+
+[node name="LockTimer" type="Timer" parent="Grid"]
+wait_time = 0.5
+one_shot = true
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11")
+autoplay = true
+
+[connection signal="timeout" from="Grid/LockTimer" to="Grid" method="_on_LockTimer_timeout"]

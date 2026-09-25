@@ -18,6 +18,9 @@ mono_crash.*.json
 
 # Project-specific ignores
 /visuals
-/audio
+/audio/*
+# ...but the Tetris battle music is part of the project, not a licensed asset drop.
+!/audio/Tetris.wav
+!/audio/Tetris.wav.import
 /godot/debug/save
 .godot/

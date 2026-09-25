@@ -29,6 +29,10 @@ class_name Combat extends CanvasLayer
 ## a turn to act.
 var round_count: int = 0
 
+## When true, combats are resolved by playing a game of Tetris instead of the
+## turn-based JRPG battle. Set to false to restore the original OpenRPG combat.
+@export var use_tetris_combat: = true
+
 # Keep track of what music track was playing previously, and return to it once combat has finished.
 var _previous_music_track: AudioStream = null
 
@@ -44,10 +48,78 @@ func _ready() -> void:
 	FieldEvents.combat_triggered.connect(setup)
 
 
-## Begin a combat. Takes a PackedScene as its only parameter, expecting it to be a CombatState 
+## Begin a combat. Takes a PackedScene as its only parameter, expecting it to be a CombatState
 ## object once instantiated.
 ## This is normally a response to [signal FieldEvents.combat_triggered].
 func setup(arena: PackedScene) -> void:
+	if use_tetris_combat:
+		await _setup_tetris_combat(arena)
+	else:
+		await _setup_jrpg_combat(arena)
+
+
+## Resolve the encounter with a game of Tetris. The board's difficulty is derived from the enemies
+## placed in `arena`; see [TetrisBattleConfig].
+func _setup_tetris_combat(arena: PackedScene) -> void:
+	await Transition.cover(0.2)
+	show()
+
+	# The JRPG combat HUD (battler portraits, action menu) has nothing to show for a Tetris battle.
+	_ui.hide()
+
+	var battle: = TetrisBattle.new()
+	battle.config = TetrisBattleConfig.from_arena(arena)
+	add_child(battle)
+
+	# Silence the field music; the Tetris scene plays its own track.
+	_previous_music_track = Music.get_playing_track()
+	Music.stop()
+
+	# Tell the rest of the game that the field state has given way to a combat state.
+	CombatEvents.combat_initiated.emit()
+
+	Transition.clear.call_deferred(0.2)
+	await Transition.finished
+
+	# Hand control to the player until the Tetris game reports a result.
+	var results: Array = await battle.finished
+	var is_player_victory: bool = results[0]
+	var final_lines: int = results[2]
+
+	battle.queue_free()
+	await _on_tetris_combat_finished(is_player_victory, final_lines)
+
+
+func _on_tetris_combat_finished(is_player_victory: bool, final_lines: int) -> void:
+	await _display_tetris_results_dialog(is_player_victory, final_lines)
+
+	_transition_delay_timer.start()
+	await _transition_delay_timer.timeout
+	await Transition.cover(0.2)
+	hide()
+	_ui.show()
+
+	Music.play(_previous_music_track)
+	_previous_music_track = null
+
+	# Whatever object started the combat takes over the flow of the game from here.
+	CombatEvents.combat_finished.emit(is_player_victory)
+
+
+func _display_tetris_results_dialog(is_player_victory: bool, final_lines: int) -> void:
+	var events: Array[String] = []
+	if is_player_victory:
+		events.append("You cleared %d lines and won the battle!" % final_lines)
+	else:
+		events.append("You topped out after %d lines. You lost the battle!" % final_lines)
+
+	var timeline: = DialogicTimeline.new()
+	timeline.events = events
+	Dialogic.start_timeline(timeline)
+	await Dialogic.timeline_ended
+
+
+func _setup_jrpg_combat(arena: PackedScene) -> void:
 	await Transition.cover(0.2)
 	show()
 
