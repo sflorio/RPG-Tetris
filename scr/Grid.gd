@@ -128,7 +128,7 @@ func drawGrid():
 				circle.position = Vector2(x*spriteSize + gridOffsetX,y*spriteSize + gridOffsetY + 16)
 			else:
 				circle.position = Vector2(x*spriteSize + gridOffsetX,y*spriteSize + gridOffsetY)
-			circle.texture = PokeballTextures.getTextureForColorIndex(grid[x][y])
+			circle.texture = BlockTextures.getTextureForColorIndex(grid[x][y])
 			circle.scale = Vector2(2,2)
 			circle.centered = false
 			add_child(circle)

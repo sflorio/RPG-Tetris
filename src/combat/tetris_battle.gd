@@ -29,6 +29,9 @@ const BANNER_HEIGHT: = 90.0
 ## Margin around the enemy roster drawn beside the board.
 const ROSTER_MARGIN: = 40.0
 
+## Vertical space kept free below the board for the clear tally.
+const TALLY_HEIGHT: = 70.0
+
 ## Pause after the final blow so the player sees the last enemy drop before the screen fades.
 const VICTORY_PAUSE: = 0.8
 
@@ -41,6 +44,7 @@ var rules: = TetrisDamageRules.new()
 var _tetris: Node2D = null
 var _grid: Node2D = null
 var _enemy_list: UITetrisEnemyList = null
+var _clear_tally: UIClearTally = null
 var _board_rect: = Rect2()
 var _active_popup: Control = null
 
@@ -61,6 +65,7 @@ func _ready() -> void:
 	_add_banner(viewport_size)
 	_add_board(viewport_size)
 	_add_enemy_roster()
+	_add_clear_tally(viewport_size)
 
 
 func _add_banner(viewport_size: Vector2) -> void:
@@ -89,7 +94,7 @@ func _add_board(viewport_size: Vector2) -> void:
 	(_grid.get_node("UI") as Control).theme = tetris_theme
 
 	# Scale the board to fill the space under the banner without distortion.
-	var board_area: = Vector2(viewport_size.x, viewport_size.y - BANNER_HEIGHT)
+	var board_area: = Vector2(viewport_size.x, viewport_size.y - BANNER_HEIGHT - TALLY_HEIGHT)
 	var scale_factor: = minf(board_area.x / DESIGN_SIZE.x, board_area.y / DESIGN_SIZE.y)
 	var board_size: = DESIGN_SIZE * scale_factor
 	_tetris.scale = Vector2(scale_factor, scale_factor)
@@ -115,6 +120,14 @@ func _add_enemy_roster() -> void:
 	_enemy_list.setup(config.enemies)
 
 
+# The tally sits in the strip reserved under the board.
+func _add_clear_tally(viewport_size: Vector2) -> void:
+	_clear_tally = UIClearTally.new()
+	_clear_tally.position = Vector2(0.0, viewport_size.y - TALLY_HEIGHT)
+	_clear_tally.size = Vector2(viewport_size.x, TALLY_HEIGHT)
+	add_child(_clear_tally)
+
+
 # --- Combat ----------------------------------------------------------------------------------
 
 func _on_lines_cleared(count: int, piece: int, is_perfect_clear: bool) -> void:
@@ -123,16 +136,28 @@ func _on_lines_cleared(count: int, piece: int, is_perfect_clear: bool) -> void:
 	if target == null:
 		return
 
-	# Damage spills onto the next enemy so a big hit can take down two weak ones at once.
+	# Damage spills onto the next enemy so a big hit can take down two weak ones at once. Every
+	# enemy the blow reaches is recorded, otherwise the ones further down the queue would take
+	# damage without their bar ever updating.
+	var struck_indices: Array[int] = []
 	var remaining: = breakdown.total_damage
 	while remaining > 0:
-		var enemy: = _get_target_enemy()
-		if enemy == null:
+		var index: = _enemy_list.get_target_index()
+		if index < 0:
 			break
-		remaining -= enemy.take_damage(remaining)
 
-	_enemy_list.refresh()
+		var dealt: = config.enemies[index].take_damage(remaining)
+		if dealt <= 0:
+			break
+		struck_indices.append(index)
+		remaining -= dealt
+
+	for index in struck_indices:
+		_enemy_list.play_hit(index)
 	_show_damage_popup(breakdown)
+	_clear_tally.record_clear(
+		piece, count, rules.same_piece_streak, TetrisDamageRules.SAME_PIECE_STREAK_LENGTH
+	)
 
 	if _get_target_enemy() == null:
 		_win_battle()

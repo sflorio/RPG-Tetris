@@ -40,12 +40,15 @@ damage = ceil((lines + flat_bonuses) * all_multipliers)
 |---|---|---|
 | Line count | 1 line ×1, 2 ×1.5, 3 ×2, 4 ×3 | `DOUBLE` / `TRIPLE` / `TETRIS` |
 | Combo | +1 flat damage per clear in an unbroken chain | `COMBO xN` |
-| Same-piece streak | 3 clears in a row with the **square** doubles the damage, then restarts | `SQUARE STREAK x2` |
+| Same-piece streak | 3 clears in a row with the **same piece** triples the damage, then restarts | `SQUARE STREAK x3` |
 | Back-to-back | Two Tetrises in a row ×1.5 | `BACK-TO-BACK x1.5` |
 | Perfect clear | Emptying the board ×5 | `PERFECT CLEAR x5` |
 
-Worked example — a 3-line clear that completes a square streak while 3 clears
-into a combo: `(3 lines + 2 combo) × 2 (TRIPLE) × 2 (SQUARE STREAK) = 20`.
+Worked example — a 2-line clear that completes a square streak while 4 clears
+into a combo: `(2 lines + 3 combo) × 1.5 (DOUBLE) × 3 (SQUARE STREAK) = 23`.
+
+The streak applies to **every** piece, so three line-piece clears in a row are
+worth just as much as three squares.
 
 A **combo** breaks when a piece locks without clearing. A **same-piece streak**
 deliberately does not, so "three clears with the square" doesn't demand three
@@ -73,10 +76,17 @@ Anything with a non-empty `label` is shown to the player automatically.
 
 ## Enemies
 
-Each enemy in the encounter's `CombatArena` becomes a `TetrisEnemy` with its own
-health bar. Damage hits the **first enemy still standing** (marked `>`), and
-overkill spills onto the next one, so a big Tetris can drop two weak enemies at
-once.
+Each enemy in the encounter's `CombatArena` becomes a `TetrisEnemy` with a
+portrait and its own health bar. Damage hits the **first enemy still standing**
+(marked `>`), and overkill spills onto the next one, so a big Tetris can drop two
+weak enemies at once — every enemy the blow reaches updates and reacts.
+
+When an enemy is hit its portrait flashes red and shakes, and its bar drains
+smoothly rather than jumping. Defeated enemies fade out and read `DOWN`.
+
+Portraits are found by convention: a Battler using
+`combat/battlers/bugcat/bugcat_stats.tres` gets `combat/battlers/bugcat/bugcat.png`.
+A missing file just means no portrait.
 
 | Enemy stat | Board effect | Rate |
 |---|---|---|
@@ -122,7 +132,9 @@ CombatArena (which enemies)
 | `src/combat/tetris_damage_rules.gd` | The rule engine. **Add new combo rules here.** |
 | `src/combat/tetris_damage_breakdown.gd` | One clear's result: damage + bonus labels |
 | `src/combat/tetris_enemy.gd` | An enemy's name and health |
-| `src/combat/ui/ui_tetris_enemy_list.gd` | Health bars, target marker, DOWN state |
+| `src/combat/ui/ui_tetris_enemy_list.gd` | Portraits, health bars, hit/defeat animations |
+| `src/combat/ui/ui_clear_tally.gd` | The strip under the board: lines cleared per piece + streak progress |
+| `scr/BlockTextures.gd` | Generates the block sprites in code (autoload). Edit `PIECE_COLORS` to restyle the board |
 | `src/combat/tetris_battle_config.gd` | Arena enemies -> battle setup |
 | `src/combat/tetris_battle.gd` | Hosts the board, applies damage, damage popups |
 | `src/combat/combat.gd` | Branches on `use_tetris_combat`; original JRPG flow kept as `_setup_jrpg_combat()` |
@@ -130,6 +142,22 @@ CombatArena (which enemies)
 
 The board reports *what happened*; it does not decide damage or when the battle
 ends (except topping out). That keeps the rules in one place.
+
+## The clear tally
+
+The strip under the board shows total lines and how many were cleared with each
+piece, plus the current streak (e.g. `SQUARE STREAK 2/3`). It exists so the
+same-piece streak bonus is playable: you can see which piece you have been
+clearing with and how close the ×3 is.
+
+## Block sprites
+
+The original pokeball sprites were replaced with standard bevelled Tetris blocks
+in the usual colours (I cyan, J blue, L orange, O yellow, T purple, Z red,
+S green). They are drawn in code by the `BlockTextures` autoload, so there are no
+image files to manage — change `PIECE_COLORS` in `scr/BlockTextures.gd` and the
+board, previews and ghost piece all follow. The old `spr/poke*.png` files are
+still in the repo but unused.
 
 ### Changes made to PokeTetris
 

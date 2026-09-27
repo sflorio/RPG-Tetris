@@ -33,9 +33,10 @@ const LINE_COUNT_LABELS: = {1: "", 2: "DOUBLE", 3: "TRIPLE", 4: "TETRIS"}
 ## How many clears in a row with the same piece trigger the streak bonus.
 const SAME_PIECE_STREAK_LENGTH: = 3
 
-## Streak multiplier per piece. Pieces absent from this table have no streak bonus.
-## By default three clears in a row with the square double the damage.
-const SAME_PIECE_STREAK_MULTIPLIERS: = {Piece.O: 2.0}
+## Damage multiplier for clearing [constant SAME_PIECE_STREAK_LENGTH] times in a row with the same
+## piece. Applies to every piece, so three square clears in a row triple the damage, and so do
+## three line-piece clears.
+const SAME_PIECE_STREAK_MULTIPLIER: = 3.0
 
 ## Multiplier for clearing every block off the board.
 const PERFECT_CLEAR_MULTIPLIER: = 5.0
@@ -129,16 +130,14 @@ func _rule_combo() -> Contribution:
 	return contribution
 
 
-# The rule from the design: three clears in a row with the square doubles the damage. The streak
-# then restarts, so it pays out again on the sixth, ninth, and so on.
+# Three clears in a row with the same piece triple the damage. The streak then restarts, so it pays
+# out again on the sixth, ninth, and so on.
 func _rule_same_piece_streak(piece: int) -> Contribution:
 	var contribution: = Contribution.new()
-	if not SAME_PIECE_STREAK_MULTIPLIERS.has(piece):
-		return contribution
-	if same_piece_streak < SAME_PIECE_STREAK_LENGTH:
+	if piece == Piece.NONE or same_piece_streak < SAME_PIECE_STREAK_LENGTH:
 		return contribution
 
-	contribution.multiplier = SAME_PIECE_STREAK_MULTIPLIERS[piece]
+	contribution.multiplier = SAME_PIECE_STREAK_MULTIPLIER
 	contribution.label = "%s STREAK x%s" % [
 		PIECE_NAMES.get(piece, "?"), _format_multiplier(contribution.multiplier)
 	]

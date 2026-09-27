@@ -57,7 +57,9 @@ static func from_arena(arena: PackedScene) -> TetrisBattleConfig:
 		enemy_counts[enemy_name] = enemy_counts.get(enemy_name, 0) + 1
 
 		var enemy_hp: = maxi(1, roundi(float(battler.stats.base_max_health) / HEALTH_PER_HP))
-		config.enemies.append(TetrisEnemy.new(enemy_name, enemy_hp))
+		var enemy: = TetrisEnemy.new(enemy_name, enemy_hp)
+		enemy.icon = _load_enemy_icon(battler)
+		config.enemies.append(enemy)
 
 	if not config.enemies.is_empty():
 		config.garbage_rows = total_attack / ATTACK_PER_GARBAGE_ROW
@@ -91,6 +93,21 @@ func get_total_hp() -> int:
 # A battle with no enemies could never be won, so stand something up to fight.
 func _add_fallback_enemy() -> void:
 	enemies.append(TetrisEnemy.new("Training Dummy", 5))
+
+
+# Battler art follows the same convention as its stats, so
+# "res://combat/battlers/bugcat/bugcat_stats.tres" implies "res://combat/battlers/bugcat/bugcat.png".
+# Returns null when an enemy has no portrait, which the roster UI tolerates.
+static func _load_enemy_icon(battler: Battler) -> Texture2D:
+	var stats_path: = battler.stats.resource_path
+	if stats_path.is_empty():
+		return null
+
+	var slug: = stats_path.get_file().get_basename().trim_suffix("_stats")
+	var icon_path: = "%s/%s.png" % [stats_path.get_base_dir(), slug]
+	if not ResourceLoader.exists(icon_path):
+		return null
+	return load(icon_path) as Texture2D
 
 
 # Battler nodes are named generically ("Battler2"), so name enemies after their stats resource:

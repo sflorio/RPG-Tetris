@@ -13,6 +13,9 @@ var max_hp: int = 5
 ## Health remaining. Reaching 0 defeats the enemy.
 var hp: int = 5
 
+## Portrait shown at the start of this enemy's health bar. May be null.
+var icon: Texture2D = null
+
 
 func _init(enemy_name: String = "Enemy", starting_hp: int = 5) -> void:
 	display_name = enemy_name
