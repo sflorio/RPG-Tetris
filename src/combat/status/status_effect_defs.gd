@@ -99,6 +99,20 @@ const CANCELS: = {
 	POISON: [RENEW],
 }
 
+## What the player is told when an effect lands, e.g. "BLINDED!".
+const CALLOUTS: = {
+	SHIELD: "SHIELDED!", HASTE: "HASTED!", RENEW: "RENEWED!",
+	BLIND: "BLINDED!", POISON: "POISONED!", BLEED: "BLEEDING!", INFECTION: "INFECTED!",
+	SHOCKED: "SHOCKED!", CONFUSION: "CONFUSED!",
+	GOLDEN: "GOLDEN!", CHARGED: "CHARGED!",
+	BURNING: "BURNING!", FROZEN: "FROZEN!", THORNED: "THORNED!",
+}
+
+
+static func get_callout(id: String) -> String:
+	return CALLOUTS.get(id, id.to_upper() + "!")
+
+
 ## Effects that are consumed rather than timed.
 const STACK_BASED: Array[String] = [SHIELD]
 

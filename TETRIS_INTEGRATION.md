@@ -107,6 +107,12 @@ Strike is never announced as a plain hit.
 | Rally Strike | `RALLY STRIKE!!` | gold |
 | Union Assault | `UNION ASSAULT!!!` | red |
 
+**Status call-outs.** An effect taking hold announces itself too — `BLINDED!`,
+`POISONED!`, `SHIELDED!` — in red for an affliction and green for a boon, with the
+afflicted unit and the exact tier beneath. It trails the damage number by a beat
+so the two read in order. Without this a third of the board simply went dark with
+no stated cause.
+
 A Perfect Strike turns the number red and adds `PERFECT STRIKE`; a fully dodged
 attack reads `MISS`. Heavier attacks overshoot further on the scale punch, shake
 on impact and hold longer before drifting off. All of it is in
@@ -147,7 +153,7 @@ Blind, Shocked and Confusion are carried by units but act on the board. Any
 afflicted ally affects the whole team's board — the simplest reading of "some Unit
 Effects will affect the Board".
 
-Enemies have a 35% chance to inflict an effect when an attack lands, and Rally
+Enemies have an 18% chance to inflict an effect when an attack lands, and Rally
 Strikes grant the team Shield. Both are placeholders: the design gives enemies
 attack tables and characters their own equipped Rally Strikes, neither modelled yet.
 
@@ -188,7 +194,7 @@ CombatArena (which Battlers)
 | `src/combat/enemy_board.gd` | The scripted enemy board |
 | `src/combat/status/status_effect.gd` | One active effect: tier, duration, stacks |
 | `src/combat/status/status_effect_defs.gd` | **The effect table.** Add effects here |
-| `src/combat/ui/ui_attack_popup.gd` | Fighting-game style hit call-outs |
+| `src/combat/ui/ui_combat_popup.gd` | Hit and status call-outs |
 | `src/combat/ui/board_skin.gd` | Runtime restyle of a board instance |
 | `src/combat/ui/ui_unit_roster.gd` | Roster for either team; health + cast bars |
 | `src/combat/tetris_battle.gd` | Wires it together |

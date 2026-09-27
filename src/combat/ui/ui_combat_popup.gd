@@ -1,9 +1,10 @@
-## The hit announcement that punches over a board when an attack lands.
+## The announcement that punches over a board when something lands on it.
 ##
-## Reads like a fighting game rather than a spreadsheet: a named call-out ("RALLY STRIKE!!"), a big
-## outlined damage number, and a hit counter when several attacks land at once. Escalates with the
-## weight of the attack, so a Union Assault does not look like a poke.
-class_name UIAttackPopup extends Control
+## Reads like a fighting game rather than a spreadsheet. [method play] announces an attack — a named
+## call-out ("RALLY STRIKE!!"), a big outlined damage number, and a hit counter when several land at
+## once. [method play_status] announces a status effect taking hold, so a third of the board going
+## dark is never a mystery.
+class_name UICombatPopup extends Control
 
 const FONT_BOLD: = "res://addons/dialogic/Example Assets/Fonts/Roboto-Bold.ttf"
 
@@ -34,6 +35,8 @@ const KIND_COLORS: = {
 	AttackResolver.Kind.UNION_ASSAULT: Color("ff5e7a"),
 }
 
+const BUFF_COLOR: = Color("6ee7a0")
+const DEBUFF_COLOR: = Color("ff8080")
 const DAMAGE_COLOR: = Color("ffe066")
 const CRIT_COLOR: = Color("ff4d6d")
 const MISS_COLOR: = Color("94a3b8")
@@ -78,6 +81,38 @@ func play(results: Array[AttackResult], total_damage: int, rect: Rect2) -> void:
 		))
 
 	_animate(heaviest, all_missed)
+
+
+## Announces status effects taking hold on `unit`, e.g. "BLINDED!". Smaller than an attack
+## call-out so it never competes with the damage number, but impossible to miss.
+func play_status(applied: Array[StatusEffect], unit: CombatUnit, rect: Rect2) -> void:
+	if applied.is_empty():
+		return
+
+	_font = load(FONT_BOLD)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	z_index = 20
+	# Sits below the damage number so the two can be read at once.
+	position = Vector2(rect.position.x, rect.get_center().y + 90.0)
+	size = Vector2(rect.size.x, 140.0)
+
+	var is_buff: = StatusEffectDefs.is_positive(applied[0].id)
+	var callouts: Array[String] = []
+	var detail: Array[String] = []
+	for effect in applied:
+		callouts.append(StatusEffectDefs.get_callout(effect.id))
+		detail.append(effect.get_display_name())
+
+	add_child(_build_label(
+		"  ".join(callouts), NAME_FONT_SIZE - 6, NAME_OUTLINE,
+		BUFF_COLOR if is_buff else DEBUFF_COLOR, 0.0
+	))
+	add_child(_build_label(
+		"%s  -  %s" % [unit.display_name, ", ".join(detail)],
+		DETAIL_FONT_SIZE, DETAIL_OUTLINE, Color("cbd5e1"), NAME_FONT_SIZE + 4.0
+	))
+
+	_animate(AttackResolver.Kind.SPECIAL, false)
 
 
 # A hard scale punch, a settle, then a drift upward as it fades. The heavier the attack, the more

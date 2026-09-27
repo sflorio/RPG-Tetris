@@ -41,8 +41,12 @@ const MARGIN: = 24.0
 const END_PAUSE: = 0.8
 
 ## Chance an enemy attack also inflicts a status effect. Placeholder: the design gives enemies
-## attack tables, which are not modelled yet.
-const ENEMY_STATUS_CHANCE: = 0.35
+## attack tables, so eventually specific enemies should inflict specific effects rather than every
+## enemy rolling against one shared list. Kept low so afflictions stay notable rather than constant.
+const ENEMY_STATUS_CHANCE: = 0.18
+
+## Delay before a status call-out follows the damage number, so the two are read in order.
+const STATUS_POPUP_DELAY: = 0.45
 
 ## Who is fighting and how the boards start. Assign before adding this node to the tree.
 var config: = TetrisBattleConfig.new()
@@ -61,7 +65,7 @@ var _union_ui: UIUnionMeter = null
 
 var _player_board_rect: = Rect2()
 var _enemy_board_rect: = Rect2()
-var _active_popup: UIAttackPopup = null
+var _active_popup: UICombatPopup = null
 var _is_over: = false
 
 ## Fog panels covering thirds of the player's board, shown by the Blind effect.
@@ -238,6 +242,7 @@ func _on_lines_cleared(count: int, block_type: int) -> void:
 		return
 
 	var results: Array[AttackResult] = []
+	var rallied: Array[StatusEffect] = []
 
 	if count >= 4:
 		# Four lines is only reachable with the Line block, and rallies the whole team.
@@ -246,8 +251,11 @@ func _on_lines_cleared(count: int, block_type: int) -> void:
 			# Stands in for an equipped Rally Strike. The only one the design spells out is
 			# Doublestep ("all allies gain two stacks of Shield"), so that is what rallying does
 			# until Rally Strikes are modelled per character.
-			ally.apply_effect(StatusEffectDefs.SHIELD, StatusEffect.TIER_STRONG)
+			var shield: = ally.apply_effect(StatusEffectDefs.SHIELD, StatusEffect.TIER_STRONG)
+			if shield != null and rallied.is_empty():
+				rallied.append(shield)
 		_ally_roster.refresh()
+		_announce_status(rallied, config.get_active_allies()[0], _player_board_rect)
 	else:
 		# Otherwise only the character holding this block attacks. A block assigned to nobody still
 		# clears the line and fills the Union meter, it just deals no damage.
@@ -366,15 +374,21 @@ func _resolve_enemy_attacks(attackers: Array[CombatUnit]) -> void:
 		return
 
 	var results: Array[AttackResult] = []
+	var applied: Array[StatusEffect] = []
 	for enemy in attackers:
 		var result: = AttackResolver.resolve(enemy, target, AttackResolver.Kind.BASIC)
 		results.append(result)
 		if not result.was_dodged and randf() < ENEMY_STATUS_CHANCE:
 			var inflicted: String = StatusEffectDefs.ENEMY_INFLICTABLE.pick_random()
-			target.apply_effect(inflicted)
+			# apply_effect returns null when the effect cancelled against another one, so only
+			# what actually took hold gets announced.
+			var effect: = target.apply_effect(inflicted)
+			if effect != null:
+				applied.append(effect)
 
 	_apply_results(results, config.allies, _ally_roster, _player_board_rect)
 	_refresh_board_effects()
+	_announce_status(applied, target, _player_board_rect)
 
 	if _get_front_unit(config.allies) == null:
 		_end_battle(false)
@@ -434,13 +448,30 @@ func _end_battle(won: bool) -> void:
 
 # --- Feedback ----------------------------------------------------------------------------------
 
+# Status call-outs trail the damage number slightly, so the player reads the hit and then what it
+# did to them, rather than both at once.
+func _announce_status(
+	applied: Array[StatusEffect], unit: CombatUnit, rect: Rect2
+) -> void:
+	if applied.is_empty():
+		return
+
+	await get_tree().create_timer(STATUS_POPUP_DELAY).timeout
+	if _is_over or not is_inside_tree():
+		return
+
+	var popup: = UICombatPopup.new()
+	add_child(popup)
+	popup.play_status(applied, unit, rect)
+
+
 func _show_attack_popup(
 	results: Array[AttackResult], total_damage: int, rect: Rect2
 ) -> void:
 	if is_instance_valid(_active_popup):
 		_active_popup.queue_free()
 
-	var popup: = UIAttackPopup.new()
+	var popup: = UICombatPopup.new()
 	add_child(popup)
 	popup.play(results, total_damage, rect)
 	_active_popup = popup

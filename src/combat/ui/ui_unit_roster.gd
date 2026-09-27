@@ -101,7 +101,7 @@ func setup(
 		_health_bars.append(health_bar)
 
 		var effect_label: = Label.new()
-		effect_label.add_theme_font_size_override("font_size", 15)
+		effect_label.add_theme_font_size_override("font_size", 19)
 		effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		details.add_child(effect_label)
 		_effect_labels.append(effect_label)
@@ -176,6 +176,9 @@ func play_hit(index: int) -> void:
 
 	var unit: = _units[index]
 	_name_labels[index].text = _format_row(unit, not _is_ally_roster)
+	# An attack can inflict a status effect, so the effect line has to update with the hit rather
+	# than waiting for the next full refresh.
+	_refresh_effects(index)
 
 	var drain: Tween = null
 	if _reveal_health:
