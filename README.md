@@ -37,6 +37,21 @@ perfect clears all multiply it.
 **See [TETRIS_INTEGRATION.md](TETRIS_INTEGRATION.md)** for the full damage model,
 how enemies get their health, and how to add new combo rules.
 
+## Local patch to Dialogic
+
+Godot 4.7 made "not all code paths return a value" a parser error, and the
+bundled Dialogic has three functions that fall off the end. They now return
+explicitly:
+
+| File | Function |
+|---|---|
+| `addons/dialogic/Modules/Variable/subsystem_variables.gd:179` | `_get` -> `return null` |
+| `addons/dialogic/Modules/Variable/subsystem_variables.gd:~242` | `VariableFolder._get` -> `return null` |
+| `addons/dialogic/Modules/Text/node_name_label.gd:18` | `_set` -> `return false` |
+
+**Updating Dialogic will overwrite these.** Re-apply them, or move to a Dialogic
+release that supports Godot 4.7.
+
 ## Built on
 
 - [godot-open-rpg](https://github.com/gdquest-demos/godot-open-rpg) by GDQuest —

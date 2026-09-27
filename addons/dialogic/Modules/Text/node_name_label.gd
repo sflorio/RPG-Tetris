@@ -23,3 +23,5 @@ func _set(property, what):
 		else:
 			name_label_root.show()
 		return true
+	# _set reports whether it handled the property. Godot 4.7 requires the path to be explicit.
+	return false

@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=5 format=3 uid="uid://biq84075xlypd"]
+[gd_resource type="TileSet" format=3 uid="uid://biq84075xlypd"]
 
 [ext_resource type="Texture2D" uid="uid://d2qfi5sncf72b" path="res://overworld/maps/tilesets/town_tilemap.png" id="1_c40y6"]
 [ext_resource type="Texture2D" uid="uid://dm4h0uo6gjp22" path="res://overworld/maps/tilesets/dungeon_tilemap.png" id="2_e8188"]
