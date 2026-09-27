@@ -25,7 +25,12 @@ const DESIGN_SIZE: = Vector2(600.0, 821.0)
 const PLAYFIELD_RECT: = Rect2(139.0, 74.0, 322.0, 662.0)
 
 ## The board was laid out for Godot's default font size; the project theme uses a much larger one.
-const TETRIS_FONT_SIZE: = 16
+const TETRIS_FONT_SIZE: = 18
+
+## Clean font for the board's readouts, replacing the DOS pixel font.
+const BOARD_FONT: = "res://addons/dialogic/Example Assets/Fonts/Roboto-Bold.ttf"
+
+## Shared by both boards, so they are styled identically.
 
 const BANNER_HEIGHT: = 90.0
 const TALLY_HEIGHT: = 84.0
@@ -56,7 +61,7 @@ var _union_ui: UIUnionMeter = null
 
 var _player_board_rect: = Rect2()
 var _enemy_board_rect: = Rect2()
-var _active_popup: Control = null
+var _active_popup: UIAttackPopup = null
 var _is_over: = false
 
 ## Fog panels covering thirds of the player's board, shown by the Blind effect.
@@ -124,6 +129,7 @@ func _add_boards(viewport_size: Vector2) -> void:
 	_grid.piece_rotated.connect(_on_piece_rotated)
 	_grid.battle_finished.connect(_on_grid_battle_finished)
 	_apply_board_theme(_grid)
+	BoardSkin.apply(_grid)
 	_tetris.scale = Vector2(scale_factor, scale_factor)
 	_tetris.position = _player_board_rect.position
 	add_child(_tetris)
@@ -133,15 +139,35 @@ func _add_boards(viewport_size: Vector2) -> void:
 		config.junk_rows, config.party.has_power(PartyStats.THIRD_EYE)
 	)
 	_apply_board_theme(_enemy_board.grid)
+	BoardSkin.apply(_enemy_board.grid)
 	_enemy_board.root.scale = Vector2(scale_factor, scale_factor)
 	_enemy_board.root.position = _enemy_board_rect.position
 	add_child(_enemy_board.root)
+
+	_add_playfield_frame(_player_board_rect)
+	_add_playfield_frame(_enemy_board_rect)
+
+
+# A thin rounded border around a playfield, standing in for the pixel frame the skin hides.
+func _add_playfield_frame(board_rect: Rect2) -> void:
+	var frame: = Panel.new()
+	frame.add_theme_stylebox_override("panel", BoardSkin.make_frame_style())
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.position = board_rect.position + (PLAYFIELD_RECT.position - Vector2(4, 4))*_board_scale
+	frame.size = (PLAYFIELD_RECT.size + Vector2(8, 8)) * _board_scale
+	# Above the board (whose Grid sits at z_index 1) so the border is not covered by blocks.
+	frame.z_index = 2
+	add_child(frame)
 
 
 func _apply_board_theme(grid: Node2D) -> void:
 	var board_theme: = Theme.new()
 	board_theme.default_font_size = TETRIS_FONT_SIZE
 	board_theme.set_font_size("font_size", "Label", TETRIS_FONT_SIZE)
+	var font: = load(BOARD_FONT) as Font
+	if font != null:
+		board_theme.default_font = font
+		board_theme.set_font("font", "Label", font)
 	(grid.get_node("UI") as Control).theme = board_theme
 
 
@@ -408,65 +434,16 @@ func _end_battle(won: bool) -> void:
 
 # --- Feedback ----------------------------------------------------------------------------------
 
-# Plain Controls with explicit positions are used rather than a VBoxContainer: a container would
-# re-layout the labels into its own (zero-height) rect and they would never appear.
 func _show_attack_popup(
 	results: Array[AttackResult], total_damage: int, rect: Rect2
 ) -> void:
-	const DAMAGE_HEIGHT: = 64.0
-	const LINE_HEIGHT: = 30.0
-
 	if is_instance_valid(_active_popup):
 		_active_popup.queue_free()
 
-	var popup: = Control.new()
-	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# The board sets z_index = 1 on its Grid, so the popup must sit above it to be seen at all.
-	popup.z_index = 10
-	popup.position = Vector2(rect.position.x, rect.get_center().y)
-	popup.size = Vector2(rect.size.x, DAMAGE_HEIGHT)
-
-	# Without a backdrop the text is unreadable over a busy stack.
-	var backdrop: = PanelContainer.new()
-	var backdrop_style: = StyleBoxFlat.new()
-	backdrop_style.bg_color = Color(0.04, 0.04, 0.08, 0.82)
-	backdrop_style.set_corner_radius_all(10)
-	backdrop_style.content_margin_left = 12.0
-	backdrop_style.content_margin_right = 12.0
-	backdrop.add_theme_stylebox_override("panel", backdrop_style)
-	backdrop.position = Vector2(rect.size.x*0.12, -8.0)
-	backdrop.size = Vector2(rect.size.x*0.76, DAMAGE_HEIGHT + LINE_HEIGHT*results.size() + 16.0)
-	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	popup.add_child(backdrop)
-
-	var damage_label: = Label.new()
-	damage_label.text = "-%d" % total_damage
-	damage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	damage_label.size = Vector2(rect.size.x, DAMAGE_HEIGHT)
-	damage_label.add_theme_font_size_override("font_size", 58)
-	damage_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
-	popup.add_child(damage_label)
-
-	var lines: Array[String] = []
-	for result in results:
-		lines.append(result.get_label())
-
-	var detail: = Label.new()
-	detail.text = "\n".join(lines)
-	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	detail.position = Vector2(0.0, DAMAGE_HEIGHT)
-	detail.size = Vector2(rect.size.x, LINE_HEIGHT * lines.size())
-	detail.add_theme_font_size_override("font_size", 24)
-	detail.add_theme_color_override("font_color", Color(0.65, 0.9, 1.0))
-	popup.add_child(detail)
-
+	var popup: = UIAttackPopup.new()
 	add_child(popup)
+	popup.play(results, total_damage, rect)
 	_active_popup = popup
-
-	var tween: = create_tween().set_parallel()
-	tween.tween_property(popup, "position:y", popup.position.y - 130.0, 1.1)
-	tween.tween_property(popup, "modulate:a", 0.0, 1.1).set_delay(0.35)
-	tween.chain().tween_callback(popup.queue_free)
 
 
 func _on_grid_battle_finished(won: bool, final_score: int, final_lines: int) -> void:

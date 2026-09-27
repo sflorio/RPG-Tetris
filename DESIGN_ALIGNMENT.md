@@ -128,8 +128,8 @@ Worth keeping rather than rewriting:
 - [x] Remap combat controls to the spec, with selectable Keyboard A / B schemes.
 - [x] Delete the pokeball sprites and the `PokeballTextures` autoload.
 - [x] Rename `garbage_rows` → `junk_rows`.
-- [ ] Replace the red pixel frame, `russia.png` and the DOS font with the
-      flat-modern board style. *Deferred: the HUD changes again in Phase 3.*
+- [x] Replace the red pixel frame, the Kremlin and the DOS font with the
+      flat-modern board style, applied per board instance by `BoardSkin`.
 
 ### Phase 1 — board geometry — **done**
 - [x] Widen the board to **10×40**, 20 visible, 20 hidden spawn area.
