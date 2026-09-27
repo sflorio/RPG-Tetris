@@ -158,11 +158,21 @@ Worth keeping rather than rewriting:
 - [ ] Enemy variety: every enemy currently uses a Basic Attack on a speed-derived
       timer. Real attack tables, Techniques and status application come with Phase 4.
 
-### Phase 4 — status effects and Xenoblocks
-- [ ] Effect framework ticking per round, with `-` / normal / `+` tiers.
-- [ ] Board effects first (Shocked, Confusion, Blind, Golden, Charged, Burning,
-      Frozen, Thorned) since they need board hooks.
-- [ ] Xenoblock shapes and Infection generation.
+### Phase 4 — status effects and Xenoblocks — **framework done, 9 of 14 effects live**
+- [x] Effect framework with `-` / normal / `+` tiers, ticking once per Round.
+- [x] Compound effects: Renew cancels with Bleed and with Poison, clearing both.
+- [x] Shield (halves damage, consumed by stack), Renew, Poison, Bleed (on every
+      rotation), Haste (spent per block generation, not per Round).
+- [x] Board effects carried by units: Shocked (no rotation), Confusion (preview
+      hidden), Blind (a third of the playfield fogged, chosen by team position).
+- [x] Enemies inflict effects on hit; Rally Strikes grant Shield.
+- [x] Effects shown in both rosters, tinted by whether they help or hurt.
+- [ ] **Per-block effects** — Golden, Charged, Burning, Frozen, Thorned. All five
+      need the board to store a *state per cell* alongside its colour, which is a
+      change to `Grid` itself. That is the next meaningful chunk.
+- [ ] **Xenoblocks**, and therefore Infection. The vault defines the malformed
+      shapes only as images, so the actual cell layouts have to be specified
+      before they can be built — see §5.
 
 ### Phase 5 — meta systems
 Techniques/TP, Rally Strikes, Soul Gems, Trinkets, Constellations + Stars,
@@ -184,6 +194,12 @@ Xenoshards, Psionic Powers, Field Actions, Campfires, Basecamp, Menus.
    *rotate* in the other.
 4. **Square strength.** `Raw Ideas` floats "all pieces except Square can clear 3+
    lines" and "Square pieces are naturally a bit stronger". Is that settled?
+5. **Xenoblock shapes.** The Boards note gives each variant (`O+`, `T#`, `J-` …)
+   as a screenshot, so the cell layouts cannot be read from the vault. They need
+   writing down as coordinates before Xenoblocks or Infection can be built.
+6. **Whose board does a unit effect fog?** Blind is a Unit Effect whose effect is
+   on the board. Currently any afflicted ally fogs a third of the team's board,
+   picked by that ally's position in the team. Worth confirming that reading.
 
 ## 6. Inconsistencies found in the vault
 

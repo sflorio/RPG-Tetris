@@ -92,6 +92,38 @@ cast-time stat, so that derivation is a placeholder in `tetris_battle_config.gd`
 Allies take damage, can be downed, and the battle is **lost** when the whole active
 team is down or the player tops out.
 
+## Status effects
+
+Effects come in three tiers, written as a suffix: `Poison-` < `Poison` < `Poison+`.
+They tick once per Round. The full table lives in
+`src/combat/status/status_effect_defs.gd`, including the effects not wired up yet,
+so it is the single record of what the game is meant to have.
+
+| Effect | What it does | Live |
+|---|---|---|
+| Shield | Halves incoming damage, consumes a stack | yes |
+| Haste | That unit's block comes next (spent per block generation) | yes |
+| Renew | Heals 2% max HP per Round | yes |
+| Poison | 1/2/3% max HP per Round by tier | yes |
+| Bleed | 1/3/5% current HP **on every rotation** | yes |
+| Blind | Fogs a third of the playfield | yes |
+| Shocked | The team cannot rotate | yes |
+| Confusion | Hides the block preview | yes |
+| Infection | Generates Xenoblocks | needs Xenoblocks |
+| Golden / Charged | Clearing heals / restores TP | needs per-block state |
+| Burning / Frozen / Thorned | Blocks decay / clear twice / hurt you | needs per-block state |
+
+**Compound effects**: applying Renew while Poisoned or Bleeding clears both, per
+the design's Compound Effects table.
+
+Blind, Shocked and Confusion are carried by units but act on the board. Any
+afflicted ally affects the whole team's board — the simplest reading of "some Unit
+Effects will affect the Board".
+
+Enemies have a 35% chance to inflict an effect when an attack lands, and Rally
+Strikes grant the team Shield. Both are placeholders: the design gives enemies
+attack tables and characters their own equipped Rally Strikes, neither modelled yet.
+
 ## Enemy health is hidden by default
 
 Enemy bars read `???` and stay full until the **HP Sight** Psionic Power is
@@ -127,6 +159,8 @@ CombatArena (which Battlers)
 | `src/combat/tetris_controls.gd` | Runtime input bindings for both schemes |
 | `src/combat/tetris_battle_config.gd` | Arena Battlers -> battle setup |
 | `src/combat/enemy_board.gd` | The scripted enemy board |
+| `src/combat/status/status_effect.gd` | One active effect: tier, duration, stacks |
+| `src/combat/status/status_effect_defs.gd` | **The effect table.** Add effects here |
 | `src/combat/ui/ui_unit_roster.gd` | Roster for either team; health + cast bars |
 | `src/combat/tetris_battle.gd` | Wires it together |
 | `scr/Grid.gd` | The board. Emits `lines_cleared(count, block_type)` and `round_finished(n)` |
@@ -163,8 +197,8 @@ Select the `Combat` node in `src/main.tscn` and untick **Use Tetris Combat**.
 
 ## Not done yet
 
-No status effects and no Xenoblocks — that is Phase 4, and most of those effects
-need board hooks (Shocked blocks rotation, Blind fogs a third of a board,
-Infection generates Xenoblocks). Enemies only use a Basic Attack on a timer; real
-attack tables and Techniques come with the same phase. See
+The five per-block effects (Golden, Charged, Burning, Frozen, Thorned) need the
+board to track a state per cell rather than just a colour. Xenoblocks — and so
+Infection — need their shapes written down as coordinates first; the vault only
+has them as images. Enemies still use a Basic Attack on a timer. See
 [DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §4.

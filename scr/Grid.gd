@@ -48,6 +48,12 @@ signal battle_finished(won: bool, final_score: int, final_lines: int)
 ## character that block is assigned to.
 signal lines_cleared(count: int, block_type: int)
 
+## Emitted whenever the active block is rotated. Bleed damages the team on every rotation.
+signal piece_rotated
+
+## While true the team cannot rotate their active block. Set by the Shocked status effect.
+var rotation_locked: bool = false
+
 ## Emitted after every completed block drop. One drop is one Round in the design's terms, and is
 ## what status effects, damage-over-time and board timers tick on.
 signal round_finished(round_number: int)
@@ -110,6 +116,20 @@ func _ready():
 	
 	drawGrid()
 	drawDroppingPoint()
+
+## Puts a block of `block_type` at the front of the queue, so it is guaranteed to come next.
+## Used by the Haste status effect.
+func force_next_block(block_type: int) -> void:
+	var piece = Piece.new()
+	piece.shape = Constants.SHAPES[clampi(block_type - 1, 0, Constants.SHAPES.size() - 1)]
+	currentBag.push_front(piece)
+	$UI/NextPieces.drawPieces(currentBag, nextBag)
+
+
+## Shows or hides the upcoming blocks. Confusion obscures them.
+func set_preview_visible(is_visible: bool) -> void:
+	$UI/NextPieces.visible = is_visible
+
 
 func newBag():
 	var bagIndexes = [0,1,2,3,4,5,6]
@@ -193,16 +213,18 @@ func _physics_process(delta):
 		sthHappened = true
 		timer=0
 		actions = 0
-	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_RIGHT):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_RIGHT) and not rotation_locked:
 		var kickValues = getPosibleRotation(Direction.CLOCKWISE)
 		if kickValues != null:
 			rotatePiece(Direction.CLOCKWISE, kickValues)
+			piece_rotated.emit()
 			sthHappened = true
 			actions += 1
-	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_LEFT):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_LEFT) and not rotation_locked:
 		var kickValues = getPosibleRotation(Direction.ANTICLOCKWISE)
 		if kickValues != null:
 			rotatePiece(Direction.ANTICLOCKWISE, kickValues)
+			piece_rotated.emit()
 			sthHappened = true
 			actions += 1
 	if Input.is_action_just_pressed(TetrisControls.ACTION_HOLD):

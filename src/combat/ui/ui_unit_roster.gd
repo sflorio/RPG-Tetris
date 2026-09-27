@@ -18,6 +18,8 @@ const DRAIN_TIME: = 0.35
 const COLOR_TARGET: = Color(1.0, 0.95, 0.85)
 const COLOR_WAITING: = Color(0.72, 0.72, 0.78)
 const COLOR_DOWNED: = Color(0.45, 0.45, 0.5)
+const COLOR_BUFF: = Color(0.55, 0.95, 0.65)
+const COLOR_DEBUFF: = Color(1.0, 0.55, 0.55)
 
 const BAR_FILL_TARGET: = Color(0.85, 0.25, 0.30)
 const BAR_FILL_WAITING: = Color(0.55, 0.25, 0.32)
@@ -35,6 +37,7 @@ var _icons: Array[TextureRect] = []
 var _name_labels: Array[Label] = []
 var _health_bars: Array[ProgressBar] = []
 var _cast_bars: Array[ProgressBar] = []
+var _effect_labels: Array[Label] = []
 
 
 ## Builds one row per unit. `units` is kept by reference so later damage is picked up by
@@ -50,7 +53,7 @@ func setup(
 	_show_cast = show_cast
 	_is_ally_roster = is_ally_roster
 
-	for array in [_rows, _icons, _name_labels, _health_bars, _cast_bars]:
+	for array in [_rows, _icons, _name_labels, _health_bars, _cast_bars, _effect_labels]:
 		array.clear()
 	for child in get_children():
 		child.queue_free()
@@ -97,6 +100,12 @@ func setup(
 		details.add_child(health_bar)
 		_health_bars.append(health_bar)
 
+		var effect_label: = Label.new()
+		effect_label.add_theme_font_size_override("font_size", 15)
+		effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		details.add_child(effect_label)
+		_effect_labels.append(effect_label)
+
 		var cast_bar: = ProgressBar.new()
 		cast_bar.custom_minimum_size = Vector2(0.0, CAST_BAR_HEIGHT)
 		cast_bar.min_value = 0.0
@@ -130,9 +139,25 @@ func refresh() -> void:
 		bar.value = float(maxi(unit.hp, 0)) if _reveal_health else float(unit.stats.max_hp)
 		bar.add_theme_stylebox_override("fill", _make_style(_get_fill_color(is_target)))
 
+		_refresh_effects(i)
 		_cast_bars[i].value = unit.get_cast_ratio()
 		_cast_bars[i].visible = _show_cast and not unit.is_downed()
 		_rows[i].modulate.a = 0.4 if unit.is_downed() else 1.0
+
+
+# Status effects are listed under the health bar, tinted by whether they help or hurt.
+func _refresh_effects(index: int) -> void:
+	var unit: = _units[index]
+	var label: = _effect_labels[index]
+	label.text = unit.get_effect_summary()
+	label.visible = not label.text.is_empty() and not unit.is_downed()
+
+	var has_debuff: = false
+	for effect: StatusEffect in unit.effects.values():
+		if not StatusEffectDefs.is_positive(effect.id):
+			has_debuff = true
+			break
+	label.add_theme_color_override("font_color", COLOR_DEBUFF if has_debuff else COLOR_BUFF)
 
 
 ## Updates just the cast bars, after a Round has advanced.
