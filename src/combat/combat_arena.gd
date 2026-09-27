@@ -6,12 +6,9 @@ class_name CombatArena extends Control
 @export var music: AudioStream
 
 @export_group("Tetris Battle")
-## Battle HP given to every enemy here. 0 = derive each from its Battler's health.
-@export var tetris_enemy_hp: = 0
-## Garbage rows on the board when the battle starts. -1 = derive from total enemy attack.
-@export var tetris_garbage_rows: = -1
-## Starting level, which sets fall speed. 0 = derive from the fastest enemy's speed.
-@export var tetris_start_level: = 0
+## Junk rows stacked on the board when combat starts, so it never begins empty.
+## -1 = derive from the total attack of the enemies in this arena.
+@export var tetris_junk_rows: = -1
 
 
 ## Retrieve the list of the combat participants, in [BattlerRoster] form.

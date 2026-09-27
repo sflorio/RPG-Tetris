@@ -1,5 +1,9 @@
 ## The enemy roster shown beside the Tetris board: a portrait, a name and a health bar per enemy.
 ##
+## Health values are hidden until the player unlocks the [b]HP Sight[/b] Psionic Power. Without it
+## the bar is drawn as an unreadable block and the numbers read "???", which is the design's intent:
+## seeing enemy health is something the player earns.
+##
 ## Built entirely in code so it needs no scene file. Call [method setup] once with the battle's
 ## enemies, then [method play_hit] when one takes damage.
 class_name UITetrisEnemyList extends VBoxContainer
@@ -19,7 +23,10 @@ const BAR_FILL_TARGET: = Color(0.85, 0.25, 0.30)
 const BAR_FILL_WAITING: = Color(0.55, 0.25, 0.32)
 const BAR_BACKGROUND: = Color(0.16, 0.16, 0.22)
 
-var _enemies: Array[TetrisEnemy] = []
+var _enemies: Array[CombatUnit] = []
+
+## Whether exact health is shown, i.e. whether HP Sight has been unlocked.
+var _reveal_health: = false
 var _rows: Array[Control] = []
 var _icons: Array[TextureRect] = []
 var _name_labels: Array[Label] = []
@@ -27,9 +34,10 @@ var _health_bars: Array[ProgressBar] = []
 
 
 ## Creates one row per enemy. `enemies` is kept by reference, so later damage is picked up by
-## [method refresh].
-func setup(enemies: Array[TetrisEnemy]) -> void:
+## [method refresh]. `reveal_health` comes from the HP Sight Psionic Power.
+func setup(enemies: Array[CombatUnit], reveal_health: bool) -> void:
 	_enemies = enemies
+	_reveal_health = reveal_health
 	_rows.clear()
 	_icons.clear()
 	_name_labels.clear()
@@ -76,7 +84,7 @@ func setup(enemies: Array[TetrisEnemy]) -> void:
 		var health_bar: = ProgressBar.new()
 		health_bar.custom_minimum_size = Vector2(0.0, BAR_HEIGHT)
 		health_bar.min_value = 0.0
-		health_bar.max_value = float(enemy.max_hp)
+		health_bar.max_value = float(enemy.stats.max_hp)
 		health_bar.value = float(enemy.hp)
 		health_bar.show_percentage = false
 		health_bar.add_theme_stylebox_override("background", _make_bar_style(BAR_BACKGROUND))
@@ -95,24 +103,20 @@ func refresh() -> void:
 		var is_target: = i == target_index
 
 		var text_color: = COLOR_DEFEATED
-		if not enemy.is_defeated():
+		if not enemy.is_downed():
 			text_color = COLOR_TARGET if is_target else COLOR_WAITING
 
 		var label: = _name_labels[i]
-		if enemy.is_defeated():
-			label.text = "%s  DOWN" % enemy.display_name
-		elif is_target:
-			label.text = "> %s  %d/%d" % [enemy.display_name, enemy.hp, enemy.max_hp]
-		else:
-			label.text = "%s  %d/%d" % [enemy.display_name, enemy.hp, enemy.max_hp]
+		label.text = _format_row(enemy, is_target)
 		label.add_theme_color_override("font_color", text_color)
 
 		var bar: = _health_bars[i]
-		bar.value = float(maxi(enemy.hp, 0))
+		# Without HP Sight the bar stays full, so it reveals nothing about remaining health.
+		bar.value = float(maxi(enemy.hp, 0)) if _reveal_health else float(enemy.stats.max_hp)
 		bar.add_theme_stylebox_override(
 			"fill", _make_bar_style(BAR_FILL_TARGET if is_target else BAR_FILL_WAITING)
 		)
-		_rows[i].modulate.a = 0.4 if enemy.is_defeated() else 1.0
+		_rows[i].modulate.a = 0.4 if enemy.is_downed() else 1.0
 
 
 ## Plays the damage reaction for one enemy: the portrait flashes red and shakes, and the health bar
@@ -122,15 +126,16 @@ func play_hit(index: int) -> void:
 		return
 
 	var enemy: = _enemies[index]
-	_name_labels[index].text = "%s  %d/%d" % [
-		enemy.display_name, maxi(enemy.hp, 0), enemy.max_hp
-	]
+	_name_labels[index].text = _format_row(enemy, true)
 
-	# Drain the bar smoothly toward the new health.
-	var bar: = _health_bars[index]
-	var drain: = create_tween()
-	drain.tween_property(bar, "value", float(maxi(enemy.hp, 0)), DRAIN_TIME)\
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# Drain the bar smoothly toward the new health, but only when HP Sight makes it readable.
+	# Without the power the bar stays full, so it gives no information away.
+	var drain: Tween = null
+	if _reveal_health:
+		var bar: = _health_bars[index]
+		drain = create_tween()
+		drain.tween_property(bar, "value", float(maxi(enemy.hp, 0)), DRAIN_TIME)\
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 	# Flash the portrait red and shake it.
 	var icon: = _icons[index]
@@ -144,8 +149,9 @@ func play_hit(index: int) -> void:
 		shake.tween_property(icon, "position", home + offset, 0.04)
 	shake.tween_property(icon, "position", home, 0.04)
 
-	if enemy.is_defeated():
-		await drain.finished
+	if enemy.is_downed():
+		if drain != null:
+			await drain.finished
 		_play_defeat(index)
 
 
@@ -166,9 +172,19 @@ func _play_defeat(index: int) -> void:
 ## enemy has been defeated.
 func get_target_index() -> int:
 	for i in _enemies.size():
-		if not _enemies[i].is_defeated():
+		if not _enemies[i].is_downed():
 			return i
 	return -1
+
+
+# "> Bugcat  12/50" with HP Sight, "> Bugcat  ???" without it.
+func _format_row(enemy: CombatUnit, is_target: bool) -> String:
+	if enemy.is_downed():
+		return "%s  DOWN" % enemy.display_name
+
+	var health: = "%d/%d" % [maxi(enemy.hp, 0), enemy.stats.max_hp] if _reveal_health else "???"
+	var prefix: = "> " if is_target else ""
+	return "%s%s  %s" % [prefix, enemy.display_name, health]
 
 
 static func _make_bar_style(color: Color) -> StyleBoxFlat:

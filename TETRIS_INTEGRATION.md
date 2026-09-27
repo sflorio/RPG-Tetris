@@ -1,198 +1,148 @@
 # Tetris combat
 
-Fights in this RPG are resolved by playing Tetris. Clearing lines damages the
-enemies; the battle is won when every enemy is defeated and lost if you top out.
+Fights are resolved by playing Tetris. Clearing a line makes the character that
+block is assigned to attack; the fight ends when every enemy is down, or when you
+top out.
 
-Built on [OpenRPG](https://github.com/gdquest-demos/godot-open-rpg) (MIT) and
-[PokeTetris](https://github.com/jpcerrone/PokeTetris) (MIT).
+Implements the Boards, Unit Stats and Controls notes from the design vault. See
+[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) for what is still outstanding.
 
 ![Tetris battle](media/tetris_battle_screenshot.png)
 
 ## How to run
 
-Open `C:\Godot\godot-open-rpg` in Godot and press F5, or:
-
 ```bash
-"C:\Godot_v4.5-stable_mono_win64\Godot_v4.5-stable_mono_win64.exe" --path "C:\Godot\godot-open-rpg"
+"C:\Godot_v4.5-stable_mono_win64\Godot_v4.5-stable_mono_win64.exe" --path .
 ```
 
 ## Controls
 
-| Key | Action |
-|---|---|
-| ← → / A D | Move piece |
-| ↓ / S | Soft drop |
-| ↑ / W | Hard drop |
-| X | Rotate clockwise |
-| Z | Rotate anticlockwise |
-| Shift | Hold / swap piece |
-| Esc | Forfeit the battle (counts as a loss) |
+Two schemes, because the design maps the same keys to different jobs. Keyboard A
+is the default; switch with `TetrisControls.apply(TetrisControls.Scheme.KEYBOARD_B)`.
+
+| Function | Keyboard A | Keyboard B | Controller |
+|---|---|---|---|
+| Move | `A` / `D` | `←` / `→` | D-Pad |
+| Soft drop | `S` | `↓` | D-Pad Down |
+| Hard drop | `W` | `↑` | D-Pad Up |
+| Rotate | `←` / `→` | `A` / `D` | `A` (right only) |
+| Hold / swap | `Space` | `Space` | `X` |
+| Forfeit | `Esc` | `Esc` | `B` |
+
+Rotate-left has no controller binding: the design assigns `A` to both rotate
+directions, which cannot work. Needs a decision.
+
+## The board
+
+10 wide × 40 tall, lower 20 visible, upper 20 hidden and used to spawn blocks and
+junk. Junk rows are seeded at the start so combat never begins on an empty board.
+
+One completed drop is a **Round** (`Grid.round_finished`). That is the tick status
+effects and board timers will hang off.
+
+Fall speed comes from the party's **Gravity** stat, not from the enemies present.
 
 ## How damage works
 
-The base rule is **one damage per line cleared**. Everything else is a bonus:
+The block used decides **who** attacks; the number of lines decides **how**:
 
-```
-damage = ceil((lines + flat_bonuses) * all_multipliers)
-```
+| Lines | Result |
+|---|---|
+| 1 | That character's Basic Attack |
+| 2 | That character's Special Attack |
+| 3 | Special Attack, +50% damage |
+| 4 | **Every** active ally performs their Rally Strike |
 
-| Rule | Effect | Label shown |
-|---|---|---|
-| Line count | 1 line ×1, 2 ×1.5, 3 ×2, 4 ×3 | `DOUBLE` / `TRIPLE` / `TETRIS` |
-| Combo | +1 flat damage per clear in an unbroken chain | `COMBO xN` |
-| Same-piece streak | 3 clears in a row with the **same piece** triples the damage, then restarts | `SQUARE STREAK x3` |
-| Back-to-back | Two Tetrises in a row ×1.5 | `BACK-TO-BACK x1.5` |
-| Perfect clear | Emptying the board ×5 | `PERFECT CLEAR x5` |
+Four-line clears are only reachable with the Line block, which is why the Line
+block is never assigned to anyone — it is the Rally Strike trigger.
 
-Worked example — a 2-line clear that completes a square streak while 4 clears
-into a combo: `(2 lines + 3 combo) × 1.5 (DOUBLE) × 3 (SQUARE STREAK) = 23`.
+Clearing with a block assigned to nobody still clears the line and fills the
+Union meter; it just deals no damage.
 
-The streak applies to **every** piece, so three line-piece clears in a row are
-worth just as much as three squares.
+**Union meter**: every cleared line fills it. At 10 lines the Union Assault fires
+automatically and the meter resets. A clear can carry the total past ten (nine
+plus a four-line clear reaches thirteen); each line over ten adds +10% damage.
 
-A **combo** breaks when a piece locks without clearing. A **same-piece streak**
-deliberately does not, so "three clears with the square" doesn't demand three
-consecutive pieces.
+> The design specifies which attack happens, not the damage formula. The current
+> maths — Power × an attack multiplier, minus Defense or Barrier by attack Type,
+> with Perfect Strike and Dodge rolled from `PSC`/`PSP`/`DOD` — is a first pass in
+> `attack_resolver.gd` and is meant to be tuned.
 
-### Adding a rule
+## Block assignment
 
-Rules live in `src/combat/tetris_damage_rules.gd`. Each one is a small method
-returning a `Contribution` (`flat`, `multiplier`, `label`):
+Assignable blocks (`O T J L S Z`) are dealt out across the active team, so with
+two allies one holds three each. The legend under the board shows the mapping and
+counts clears per block.
+
+## Enemy health is hidden by default
+
+Enemy bars read `???` and stay full until the **HP Sight** Psionic Power is
+unlocked, per the design. To reveal them:
 
 ```gdscript
-# Clearing from a board that is nearly topped out is worth more.
-func _rule_desperation(board_height_ratio: float) -> Contribution:
-	var contribution: = Contribution.new()
-	if board_height_ratio < 0.8:
-		return contribution
-	contribution.multiplier = 2.0
-	contribution.label = "DESPERATION x2"
-	return contribution
+config.party.unlock_power(PartyStats.HP_SIGHT)
 ```
-
-Then add one line to the rule list in `resolve_clear()`. Streak state lives on
-the object and survives the whole battle, so a rule can react to earlier clears.
-Anything with a non-empty `label` is shown to the player automatically.
-
-## Enemies
-
-Each enemy in the encounter's `CombatArena` becomes a `TetrisEnemy` with a
-portrait and its own health bar. Damage hits the **first enemy still standing**
-(marked `>`), and overkill spills onto the next one, so a big Tetris can drop two
-weak enemies at once — every enemy the blow reaches updates and reacts.
-
-When an enemy is hit its portrait flashes red and shakes, and its bar drains
-smoothly rather than jumping. Defeated enemies fade out and read `DOWN`.
-
-Portraits are found by convention: a Battler using
-`combat/battlers/bugcat/bugcat_stats.tres` gets `combat/battlers/bugcat/bugcat.png`.
-A missing file just means no portrait.
-
-| Enemy stat | Board effect | Rate |
-|---|---|---|
-| Health | That enemy's battle HP | 1 HP per 4 health |
-| Total attack | Garbage rows on the board at the start (one gap each) | 1 row per 5 attack |
-| Fastest speed | Starting level (fall speed) | +1 level per 20 speed |
-
-With the stock arenas:
-
-| Arena | Enemies | Battle HP | Garbage | Start level |
-|---|---|---|---|---|
-| `test_combat_arena.tscn` | Bugcat ×3 | 13 each (39) | 6 | 3 |
-| `test_combat_arena2.tscn` | Bugcat, Wolf | 13 + 25 (38) | 4 | 3 |
-
-Tuning: `HEALTH_PER_HP` in `tetris_battle_config.gd` sets fight length globally —
-lower it for longer fights.
-
-### Per-arena overrides
-
-Select an arena's root node and use the **Tetris Battle** group in the inspector:
-
-| Property | Default | Meaning |
-|---|---|---|
-| `tetris_enemy_hp` | `0` | HP for every enemy here. `0` = derive from health |
-| `tetris_garbage_rows` | `-1` | Starting garbage. `-1` = derive from attack |
-| `tetris_start_level` | `0` | Starting level. `0` = derive from speed |
 
 ## Structure
 
-The battle is split so each piece does one job:
-
 ```
-CombatArena (which enemies)
-   └─> TetrisBattleConfig   enemies + starting difficulty
-         └─> TetrisBattle   owns the board, applies damage, decides the winner
-               ├─ TetrisDamageRules   clear -> damage (combos, streaks)
-               ├─ TetrisEnemy         one enemy's health
-               └─ UITetrisEnemyList   the health bars
+CombatArena (which Battlers)
+   └─> TetrisBattleConfig    allies + enemies as CombatUnits, block assignments, junk
+         └─> TetrisBattle    owns the board, routes clears to characters, decides the winner
+               ├─ AttackResolver   one attack -> damage (Perfect Strike, Dodge)
+               ├─ UnionMeter       lines -> Union Assault
+               ├─ CombatUnit       a unit's health, stats and blocks
+               ├─ UITetrisEnemyList  portraits + health bars (HP Sight gated)
+               ├─ UIUnionMeter       Union progress
+               └─ UIClearTally       block -> character legend
 ```
 
 | File | Role |
 |---|---|
-| `src/combat/tetris_damage_rules.gd` | The rule engine. **Add new combo rules here.** |
-| `src/combat/tetris_damage_breakdown.gd` | One clear's result: damage + bonus labels |
-| `src/combat/tetris_enemy.gd` | An enemy's name and health |
-| `src/combat/ui/ui_tetris_enemy_list.gd` | Portraits, health bars, hit/defeat animations |
-| `src/combat/ui/ui_clear_tally.gd` | The strip under the board: lines cleared per piece + streak progress |
-| `scr/BlockTextures.gd` | Generates the block sprites in code (autoload). Edit `PIECE_COLORS` to restyle the board |
-| `src/combat/tetris_battle_config.gd` | Arena enemies -> battle setup |
-| `src/combat/tetris_battle.gd` | Hosts the board, applies damage, damage popups |
-| `src/combat/combat.gd` | Branches on `use_tetris_combat`; original JRPG flow kept as `_setup_jrpg_combat()` |
-| `scr/Grid.gd` | PokeTetris board. Emits `lines_cleared(count, piece, is_perfect_clear)` and `clearless_lock` |
+| `src/combat/block_types.gd` | The seven blocks; which are assignable |
+| `src/combat/unit_stats.gd` | `HP/POW/DEF/BAR/PSC/PSP/DOD/TYPE/TYPE2/LVL` |
+| `src/combat/party_stats.gd` | Party stats incl. Gravity, and unlocked Psionic Powers |
+| `src/combat/combat_unit.gd` | A unit in battle: health + assigned blocks |
+| `src/combat/attack_resolver.gd` | **Damage maths lives here.** Tune it here |
+| `src/combat/attack_result.gd` | One attack's outcome |
+| `src/combat/union_meter.gd` | Union threshold and overflow bonus |
+| `src/combat/tetris_controls.gd` | Runtime input bindings for both schemes |
+| `src/combat/tetris_battle_config.gd` | Arena Battlers -> battle setup |
+| `src/combat/tetris_battle.gd` | Wires it together |
+| `scr/Grid.gd` | The board. Emits `lines_cleared(count, block_type)` and `round_finished(n)` |
+| `scr/BlockTextures.gd` | Block sprites, generated in code |
 
-The board reports *what happened*; it does not decide damage or when the battle
-ends (except topping out). That keeps the rules in one place.
+The board reports *what happened*; it decides neither damage nor victory (only
+topping out). That keeps combat rules in one place.
 
-## The clear tally
+## Changes made to the original PokeTetris board
 
-The strip under the board shows total lines and how many were cleared with each
-piece, plus the current streak (e.g. `SQUARE STREAK 2/3`). It exists so the
-same-piece streak bonus is playable: you can see which piece you have been
-clearing with and how close the ×3 is.
-
-## Block sprites
-
-The original pokeball sprites were replaced with standard bevelled Tetris blocks
-in the usual colours (I cyan, J blue, L orange, O yellow, T purple, Z red,
-S green). They are drawn in code by the `BlockTextures` autoload, so there are no
-image files to manage — change `PIECE_COLORS` in `scr/BlockTextures.gd` and the
-board, previews and ghost piece all follow. The old `spr/poke*.png` files are
-still in the repo but unused.
-
-### Changes made to PokeTetris
-
-- Added `lines_cleared`, `clearless_lock` and `battle_finished` signals.
-- `afterDrop()` captures which piece locked **before** `currentPiece` is reset —
-  the square-streak rule depends on it.
-- Added `start_level`, `garbage_rows`, `isBoardEmpty()` (perfect clears) and
-  `end_battle()`.
-- **Replaced two `get_tree().quit()` calls** (top-out and Escape) which would
-  otherwise have closed the whole RPG.
+- Board grown from 10×23 to 10×40; blocks spawn just above the visible area.
+- Added `lines_cleared`, `round_finished` and `battle_finished` signals.
+- `afterDrop()` captures which block locked **before** `currentPiece` is reset.
+- Added `start_level`, `junk_rows`, `isBoardEmpty()` and `end_battle()`.
+- **Replaced two `get_tree().quit()` calls** (top-out and Escape) that would
+  otherwise have closed the whole game.
+- Pokeball sprites replaced with generated Tetris blocks; the `poke*.png` files
+  and the `PokeballTextures` autoload are gone.
 
 ## Switching back to JRPG combat
 
 Select the `Combat` node in `src/main.tscn` and untick **Use Tetris Combat**.
 
-## Godot version note
-
-OpenRPG was authored against Godot 4.6.2 and is being run here with Godot 4.5,
-which rewrote `config/features` to `"4.5"` and opened it without errors. That
-re-save also blanked Dialogic's `dch_directory` / `dtl_directory`, which have
-been restored from git.
-
 ## Verified
 
-- Every rule unit-tested: base damage, square streak firing on the 3rd clear and
-  resetting, a non-square clear breaking the streak, combos, back-to-back
-  Tetrises, perfect clear.
-- Damage spilling across enemies, and a battle ending when the last one drops.
-- End to end in the real game: encounter -> board -> damage -> results dialog ->
-  `combat_finished(won)`, for both a win and a loss.
-- Windowed 1920×1080 screenshot (above). Boots with zero script errors.
+- Block assignment across the active team, with the Line block left unassigned.
+- Line count → attack kind, including Rally Strike for all allies on four lines.
+- Union meter filling, firing at ten and resetting.
+- Damage spilling across enemies; every enemy reached updates and animates.
+- HP Sight gating (hidden by default, revealed when unlocked).
+- Both control schemes registering, with the board still playable after a swap.
+- End to end in the real game: encounter → board → attacks → results dialog →
+  `combat_finished(won)`.
 
 ## Not done yet
 
-Enemies are still passive: they have health but never act. Nothing pushes
-garbage onto your board mid-fight, there are no status effects, and your party
-has no influence on the board. The next step is enemy attacks on a timer driven
-by each enemy's speed stat.
+Single board only — the design calls for two, with the enemy team on its own
+board. Enemies never act. No status effects and no Xenoblocks. See
+[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §4 for the order.

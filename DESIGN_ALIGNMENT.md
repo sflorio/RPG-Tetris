@@ -124,25 +124,27 @@ Worth keeping rather than rewriting:
 
 ## 4. Change plan
 
-### Phase 0 — cheap and unambiguous (done / next)
+### Phase 0 — cheap and unambiguous — **done**
 - [x] Remap combat controls to the spec, with selectable Keyboard A / B schemes.
-- [ ] Strip the Pokémon leftovers (`spr/poke*.png`, `russia.png`, the red frame,
-      the DOS font) and adopt the flat-modern board style.
-- [ ] Rename `garbage_rows` → `junk_rows`.
+- [x] Delete the pokeball sprites and the `PokeballTextures` autoload.
+- [x] Rename `garbage_rows` → `junk_rows`.
+- [ ] Replace the red pixel frame, `russia.png` and the DOS font with the
+      flat-modern board style. *Deferred: the HUD changes again in Phase 3.*
 
-### Phase 1 — board geometry
-- [ ] Widen the board to **10×40**, 20 visible, 20 hidden spawn area.
-- [ ] Introduce the **Round** concept: one completed drop = one round, with a
-      `round_finished` signal for effects to hang off.
+### Phase 1 — board geometry — **done**
+- [x] Widen the board to **10×40**, 20 visible, 20 hidden spawn area.
+- [x] Introduce the **Round** concept: `round_finished(n)` after every drop.
 
-### Phase 2 — units and attacks (replaces the current damage model)
-- [ ] `Unit` resource: `NAME/LVL/TYPE/TYPE2/HP/POW/DEF/BAR/PSC/PSP/DOD`.
-- [ ] `PartyStats`: `LVL/EXP/TP/LUCK/CRWN/GRAV/MOVE/ENCR`.
-- [ ] Assign **Block Types to characters**; clearing routes to that character.
-- [ ] Basic / Special / Special+50% / Rally Strike by line count.
-- [ ] **Union meter** (10 lines → Union Assault, +10% per line over).
-- [ ] Delete combo / streak / back-to-back / perfect-clear rules.
-- [ ] Gate enemy HP bars behind `HP Sight`.
+### Phase 2 — units and attacks — **done**
+- [x] `UnitStats`: `NAME/LVL/TYPE/TYPE2/HP/POW/DEF/BAR/PSC/PSP/DOD`.
+- [x] `PartyStats`: `LVL/EXP/TP/LUCK/CRWN/GRAV/MOVE/ENCR` + Psionic Powers.
+- [x] Assign **Block Types to characters**; clearing routes to that character.
+- [x] Basic / Special / Special+50% / Rally Strike by line count.
+- [x] **Union meter** (10 lines → Union Assault, +10% per line over).
+- [x] Delete combo / streak / back-to-back / perfect-clear rules.
+- [x] Gate enemy HP bars behind `HP Sight`.
+- [ ] Tune the damage formula — `attack_resolver.gd` is a first pass, since the
+      vault specifies which attack fires but not the maths.
 
 ### Phase 3 — second board
 - [ ] Split the board into a reusable component; instantiate two.

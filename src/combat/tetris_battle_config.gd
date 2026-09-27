@@ -1,104 +1,150 @@
-## The Tetris difficulty for a single encounter, derived from the enemies in a [CombatArena].
+## Everything a Tetris battle needs: who is fighting on each side, and how the board starts.
 ##
-## Enemy stats map onto the board as follows:
-## [br]- Each enemy's health -> that enemy's battle HP ([constant HEALTH_PER_HP]), which line clears
-##      chip away at. The battle is won when every enemy is defeated.
-## [br]- Total enemy attack  -> garbage rows already on the board ([constant ATTACK_PER_GARBAGE_ROW]).
-## [br]- Fastest enemy speed -> starting level, i.e. fall speed ([constant SPEED_PER_LEVEL]).
-## [br][br]Any value can be overridden per arena from the "Tetris Battle" group in the
-## [CombatArena] inspector.
+## Built from the [CombatArena] that triggered the encounter. The arena's Battlers become
+## [CombatUnit]s: player Battlers form the active team, enemy Battlers the opposing team.
+##
+## Block types are handed out across the active team, so clearing a line with a given block makes
+## the character holding it attack. The Line block is never assigned — the design reserves it for
+## Rally Strikes.
 class_name TetrisBattleConfig extends RefCounted
 
-## Every this-many points of a Battler's health becomes 1 HP in the Tetris battle. Damage is small
-## (one point per line cleared), so raw RPG health would take far too long to chew through. Lower
-## this to make every fight longer, raise it to make them shorter.
-const HEALTH_PER_HP: = 4
-## Every this-many points of enemy attack adds one row of starting garbage.
-const ATTACK_PER_GARBAGE_ROW: = 5
-## Every this-many points of the fastest enemy's speed adds one starting level.
-const SPEED_PER_LEVEL: = 20
+## Junk blocks seeded on the board per point of total enemy attack, so combat never starts empty.
+const ATTACK_PER_JUNK_ROW: = 5
 
-## The enemies to defeat, in the order they are targeted.
-var enemies: Array[TetrisEnemy] = []
-var garbage_rows: = 0
-var start_level: = 1
+## The player's active team.
+var allies: Array[CombatUnit] = []
+
+## The units to defeat.
+var enemies: Array[CombatUnit] = []
+
+## Party-wide stats, including Gravity and the unlocked Psionic Powers.
+var party: PartyStats = PartyStats.new()
+
+## Junk rows stacked on the board when combat begins.
+var junk_rows: = 0
 
 ## Human-readable summary of the opposing side, e.g. "Bugcat x2, Wolf".
 var enemy_description: = "a mysterious foe"
 
 
 ## Builds a config from the arena a [signal FieldEvents.combat_triggered] carried. A null or
-## non-arena scene yields the defaults, so combat can still be triggered without one.
-static func from_arena(arena: PackedScene) -> TetrisBattleConfig:
+## non-arena scene still yields a usable battle, so combat can be triggered without one.
+static func from_arena(arena: PackedScene, party_stats: PartyStats = null) -> TetrisBattleConfig:
 	var config: = TetrisBattleConfig.new()
-	if arena == null:
-		config._add_fallback_enemy()
-		return config
+	if party_stats != null:
+		config.party = party_stats
 
-	var instance: = arena.instantiate()
-	var combat_arena: = instance as CombatArena
+	var combat_arena: CombatArena = null
+	var instance: Node = null
+	if arena != null:
+		instance = arena.instantiate()
+		combat_arena = instance as CombatArena
+
 	if combat_arena == null:
-		instance.free()
-		config._add_fallback_enemy()
+		if instance != null:
+			instance.free()
+		config._add_fallback_units()
 		return config
 
+	var roster: = combat_arena.get_battler_roster()
 	var total_attack: = 0
-	var top_speed: = 0
 	var enemy_counts: = {}  # Insertion-ordered: enemy name -> how many.
 
-	for battler in combat_arena.get_battler_roster().get_enemy_battlers():
+	for battler in roster.get_enemy_battlers():
 		if battler.stats == null:
 			continue
-		# Base stats are read because the derived stats are only initialized once in the tree.
 		total_attack += battler.stats.base_attack
-		top_speed = maxi(top_speed, battler.stats.base_speed)
 
-		var enemy_name: = _get_enemy_name(battler)
+		var enemy_name: = _get_unit_name(battler)
 		enemy_counts[enemy_name] = enemy_counts.get(enemy_name, 0) + 1
 
-		var enemy_hp: = maxi(1, roundi(float(battler.stats.base_max_health) / HEALTH_PER_HP))
-		var enemy: = TetrisEnemy.new(enemy_name, enemy_hp)
-		enemy.icon = _load_enemy_icon(battler)
+		var enemy: = CombatUnit.new(_build_stats(battler, enemy_name), false)
+		enemy.icon = _load_unit_icon(battler)
 		config.enemies.append(enemy)
 
-	if not config.enemies.is_empty():
-		config.garbage_rows = total_attack / ATTACK_PER_GARBAGE_ROW
-		config.start_level = 1 + top_speed / SPEED_PER_LEVEL
+	for battler in roster.get_player_battlers():
+		if battler.stats == null:
+			continue
+		var ally_name: = _get_unit_name(battler)
+		var ally: = CombatUnit.new(_build_stats(battler, ally_name), true)
+		ally.icon = _load_unit_icon(battler)
+		config.allies.append(ally)
+
+	config._assign_block_types()
+
+	if not enemy_counts.is_empty():
+		config.junk_rows = total_attack / ATTACK_PER_JUNK_ROW
 		config.enemy_description = _describe(enemy_counts)
 
-	# Per-arena overrides set by a designer win over the derived values.
-	if combat_arena.tetris_enemy_hp > 0:
-		for enemy in config.enemies:
-			enemy.max_hp = combat_arena.tetris_enemy_hp
-			enemy.hp = combat_arena.tetris_enemy_hp
-	if combat_arena.tetris_garbage_rows >= 0:
-		config.garbage_rows = combat_arena.tetris_garbage_rows
-	if combat_arena.tetris_start_level > 0:
-		config.start_level = combat_arena.tetris_start_level
+	if combat_arena.tetris_junk_rows >= 0:
+		config.junk_rows = combat_arena.tetris_junk_rows
 
 	instance.free()
-	if config.enemies.is_empty():
-		config._add_fallback_enemy()
+	if config.enemies.is_empty() or config.allies.is_empty():
+		config._add_fallback_units()
 	return config
 
 
-## Combined health of every enemy, i.e. the total damage needed to win.
-func get_total_hp() -> int:
+## The ally whose block types include `block_type`, or null when no one is assigned it.
+func find_ally_for_block(block_type: int) -> CombatUnit:
+	for ally in allies:
+		if ally.handles_block(block_type) and not ally.is_downed():
+			return ally
+	return null
+
+
+## Allies still standing, who take part in Rally Strikes and the Union Assault.
+func get_active_allies() -> Array[CombatUnit]:
+	return allies.filter(func(ally: CombatUnit) -> bool: return not ally.is_downed())
+
+
+## Combined health of every enemy, i.e. the damage needed to win.
+func get_total_enemy_hp() -> int:
 	var total: = 0
 	for enemy in enemies:
-		total += enemy.max_hp
+		total += enemy.stats.max_hp
 	return total
 
 
-# A battle with no enemies could never be won, so stand something up to fight.
-func _add_fallback_enemy() -> void:
-	enemies.append(TetrisEnemy.new("Training Dummy", 5))
+# Deals the assignable blocks out across the active team, so every block that can be assigned has
+# an owner as long as there is at least one ally.
+func _assign_block_types() -> void:
+	if allies.is_empty():
+		return
+	for i in BlockTypes.ASSIGNABLE.size():
+		allies[i % allies.size()].block_types.append(BlockTypes.ASSIGNABLE[i])
 
 
-# Battler art follows the same convention as its stats, so
-# "res://combat/battlers/bugcat/bugcat_stats.tres" implies "res://combat/battlers/bugcat/bugcat.png".
-# Returns null when an enemy has no portrait, which the roster UI tolerates.
-static func _load_enemy_icon(battler: Battler) -> Texture2D:
+# OpenRPG's BattlerStats predate the design's stat list, so map what exists and use the design's
+# defaults for the rest.
+static func _build_stats(battler: Battler, unit_name: String) -> UnitStats:
+	var stats: = UnitStats.new()
+	stats.display_name = unit_name
+	stats.max_hp = battler.stats.base_max_health
+	stats.power = battler.stats.base_attack
+	stats.defense = battler.stats.base_defense
+	stats.barrier = battler.stats.base_defense
+	stats.dodge = maxf(1.0, float(battler.stats.base_evasion))
+	return stats
+
+
+# A battle needs someone on each side, so stand in placeholders rather than deadlock.
+func _add_fallback_units() -> void:
+	if allies.is_empty():
+		var hero_stats: = UnitStats.new()
+		hero_stats.display_name = "Psion"
+		allies.append(CombatUnit.new(hero_stats, true))
+		_assign_block_types()
+	if enemies.is_empty():
+		var dummy_stats: = UnitStats.new()
+		dummy_stats.display_name = "Training Dummy"
+		dummy_stats.max_hp = 40
+		enemies.append(CombatUnit.new(dummy_stats, false))
+
+
+# Battler art and stats follow the same convention, so
+# "res://combat/battlers/bugcat/bugcat_stats.tres" implies ".../bugcat.png".
+static func _load_unit_icon(battler: Battler) -> Texture2D:
 	var stats_path: = battler.stats.resource_path
 	if stats_path.is_empty():
 		return null
@@ -110,9 +156,8 @@ static func _load_enemy_icon(battler: Battler) -> Texture2D:
 	return load(icon_path) as Texture2D
 
 
-# Battler nodes are named generically ("Battler2"), so name enemies after their stats resource:
-# "res://combat/battlers/bugcat/bugcat_stats.tres" -> "Bugcat".
-static func _get_enemy_name(battler: Battler) -> String:
+# Battler nodes are named generically ("Battler2"), so name units after their stats resource.
+static func _get_unit_name(battler: Battler) -> String:
 	var file_name: = battler.stats.resource_path.get_file().get_basename()
 	if file_name.is_empty():
 		return battler.name

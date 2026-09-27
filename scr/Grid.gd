@@ -2,8 +2,8 @@ extends Node2D
 
 var grid = []
 const gridWidth = 10
-const gridHeight = 23
-const vanishZone = 3
+const gridHeight = 40
+const vanishZone = 20
 const spriteSize = 32
 var gridOffsetX
 var gridOffsetY
@@ -43,19 +43,24 @@ enum Direction {CLOCKWISE, ANTICLOCKWISE}
 ## defeated; the board itself only ever ends a battle by topping out or forfeiting.
 signal battle_finished(won: bool, final_score: int, final_lines: int)
 
-## Emitted every time a locked piece clears at least one line. `piece` is the colour index of the
-## piece that caused the clear (see [enum TetrisDamageRules.Piece]). [TetrisBattle] turns this into
-## damage.
-signal lines_cleared(count: int, piece: int, is_perfect_clear: bool)
+## Emitted every time a locked piece clears at least one line. `block_type` is the colour index of
+## the block that caused the clear (see [BlockTypes]). [TetrisBattle] routes this to whichever
+## character that block is assigned to.
+signal lines_cleared(count: int, block_type: int)
 
-## Emitted when a piece locks without clearing anything, which breaks the combo chain.
-signal clearless_lock
+## Emitted after every completed block drop. One drop is one Round in the design's terms, and is
+## what status effects, damage-over-time and board timers tick on.
+signal round_finished(round_number: int)
+
+## The number of Rounds completed on this board.
+var round_number: int = 0
 
 ## Level the battle starts at, which sets how fast pieces fall.
 @export var start_level: int = 1
 
-## Rows of garbage already stacked at the bottom when the battle starts. Each row has one gap.
-@export var garbage_rows: int = 0
+## Rows of junk blocks stacked at the bottom when combat starts, so the board is never empty.
+## Each row has one gap.
+@export var junk_rows: int = 0
 
 var _battle_over := false
 
@@ -67,8 +72,8 @@ func _apply_battle_setup() -> void:
 	speed = pow(0.8-(level-1)*0.007, level-1)
 	$UI/Level/LevelNumber.text = str(level)
 
-	# Leave headroom above the garbage so the first pieces can't top out immediately.
-	var rows := clampi(garbage_rows, 0, gridHeight - vanishZone - 4)
+	# Leave headroom above the junk so the first pieces can't top out immediately.
+	var rows := clampi(junk_rows, 0, gridHeight - vanishZone - 4)
 	for i in rows:
 		var y := gridHeight - 1 - i
 		var gap := randi() % gridWidth
@@ -122,7 +127,7 @@ func drawGrid():
 	for x in range(gridWidth):
 		for y in range(vanishZone-1,gridHeight):
 			var circle = Sprite2D.new()
-			if (y == 2):
+			if (y == vanishZone - 1):
 				circle.region_enabled = true
 				circle.region_rect = Rect2(0,6,16,10)
 				circle.position = Vector2(x*spriteSize + gridOffsetX,y*spriteSize + gridOffsetY + 16)
@@ -254,11 +259,13 @@ func afterDrop():
 	currentPiece = Piece.new()
 	var cleared: int = checkAndClearFullLines()
 
-	# RPG integration: report the clear so the battle can turn it into damage.
+	# RPG integration: report the clear so the battle can turn it into character attacks.
 	if cleared > 0:
-		lines_cleared.emit(cleared, locked_piece, isBoardEmpty())
-	else:
-		clearless_lock.emit()
+		lines_cleared.emit(cleared, locked_piece)
+
+	# One completed drop ends a Round.
+	round_number += 1
+	round_finished.emit(round_number)
 
 	# RPG integration: topping out loses the battle instead of quitting the game.
 	if (checkGameOver()):
@@ -403,13 +410,16 @@ func spawnFromBag():
 	$UI/NextPieces.drawPieces(currentBag, nextBag)
 
 func spawnPiece():
+	# Pieces spawn in the hidden rows directly above the visible playfield.
+	var spawnTop = vanishZone - 3
 	var spawnIn = 1
 	var startingX = (gridWidth - currentPiece.shape[0].size())/2
 	for i in range(currentPiece.shape.size()):
-		if currentPiece.shape[i][2] != 0 && grid[startingX + i][3] != 0:
+		if currentPiece.shape[i][2] != 0 && grid[startingX + i][vanishZone] != 0:
 			spawnIn = 0
 			break;
-	currentPiece.positionInGrid = Vector2((gridWidth - currentPiece.shape[0].size())/2, spawnIn)
+	currentPiece.positionInGrid = Vector2(
+		(gridWidth - currentPiece.shape[0].size())/2, spawnTop + spawnIn)
 	currentPiece.rotationState = 0
 	addPiece()
 
