@@ -42,6 +42,7 @@ var _tetris: Node2D = null
 var _grid: Node2D = null
 var _enemy_list: UITetrisEnemyList = null
 var _board_rect: = Rect2()
+var _active_popup: Control = null
 
 
 func _ready() -> void:
@@ -160,8 +161,16 @@ func _show_damage_popup(breakdown: TetrisDamageBreakdown) -> void:
 	const DAMAGE_HEIGHT: = 70.0
 	const BONUS_HEIGHT: = 34.0
 
+	# Only the newest hit is shown: during a fast combo the popups would otherwise pile up on top of
+	# each other and none of them could be read.
+	if is_instance_valid(_active_popup):
+		_active_popup.queue_free()
+
 	var popup: = Control.new()
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The PokeTetris board sets z_index = 1 on its Grid, so the popup must sit above that or it is
+	# drawn behind the board and never seen.
+	popup.z_index = 10
 	popup.position = Vector2(_board_rect.position.x, _board_rect.get_center().y)
 	popup.size = Vector2(_board_rect.size.x, DAMAGE_HEIGHT)
 
@@ -187,6 +196,7 @@ func _show_damage_popup(breakdown: TetrisDamageBreakdown) -> void:
 		popup.add_child(bonus_label)
 
 	add_child(popup)
+	_active_popup = popup
 
 	var tween: = create_tween().set_parallel()
 	tween.tween_property(popup, "position:y", popup.position.y - 140.0, 1.1)
