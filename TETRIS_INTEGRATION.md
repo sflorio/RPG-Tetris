@@ -11,8 +11,10 @@ Implements the Boards, Unit Stats and Controls notes from the design vault. See
 
 ## How to run
 
+Requires **Godot 4.7** (tested on 4.7.2), standard build.
+
 ```bash
-"C:\Godot_v4.5-stable_mono_win64\Godot_v4.5-stable_mono_win64.exe" --path .
+godot --path .
 ```
 
 ## Controls

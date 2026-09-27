@@ -11,10 +11,17 @@ or when you top out.
 
 ## Running it
 
-Open the project in Godot and press F5, or:
+**Requires Godot 4.7** (tested on 4.7.2). Get it from
+[godotengine.org/download](https://godotengine.org/download) — the standard build,
+not .NET/Mono; there is no C# in this project.
+
+Import `project.godot` from the Godot project manager and press **F5**. The first
+import takes a minute while assets are converted.
+
+From a terminal, with `godot` being wherever you unpacked it:
 
 ```bash
-"C:\Godot_v4.5-stable_mono_win64\Godot_v4.5-stable_mono_win64.exe" --path .
+godot --path .
 ```
 
 Walk around town with the arrow keys or WASD, press Space to talk. Two
