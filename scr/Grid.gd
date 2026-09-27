@@ -143,17 +143,17 @@ func addPiece():
 func _physics_process(delta):
 	var sthHappened = false
 	# RPG integration: Escape forfeits the battle rather than closing the game.
-	if Input.is_action_just_pressed("ui_exit"):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_CANCEL):
 		_finish_battle(false)
 		return
-	if Input.is_action_just_pressed("ui_right"):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_MOVE_RIGHT):
 		if canPieceMoveRight():
 			movePieceInGrid(1,0)
 			sthHappened = true
 			actions += 1
 		deltaSum = 0
 		dasCounter = 0
-	if Input.is_action_just_pressed("ui_left"):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_MOVE_LEFT):
 		if canPieceMoveLeft():
 			movePieceInGrid(-1,0)
 			sthHappened = true
@@ -163,44 +163,44 @@ func _physics_process(delta):
 
 	deltaSum += delta
 	if (deltaSum > 2*delta) && (dasCounter>dasDelay):
-		if Input.is_action_pressed("ui_right"):
+		if Input.is_action_pressed(TetrisControls.ACTION_MOVE_RIGHT):
 			if canPieceMoveRight():
 				movePieceInGrid(1,0)
 				sthHappened = true
 				actions += 1
-		if Input.is_action_pressed("ui_left"):
+		if Input.is_action_pressed(TetrisControls.ACTION_MOVE_LEFT):
 			if canPieceMoveLeft():
 				movePieceInGrid(-1,0)
 				sthHappened = true
 				actions += 1
 		deltaSum = 0
 	dasCounter+=1
-	if Input.is_action_pressed("ui_down"):
+	if Input.is_action_pressed(TetrisControls.ACTION_SOFT_DROP):
 			if canPieceMoveDown():
 				movePieceInGrid(0,1)
 				score += 1
 				$UI/Score/ScoreNumber.text = str(score)
 				sthHappened = true
 			actions = 0
-	if Input.is_action_just_pressed("ui_up"):	
+	if Input.is_action_just_pressed(TetrisControls.ACTION_HARD_DROP):	
 		hardDropPiece()
 		afterDrop()
 		sthHappened = true
 		timer=0
 		actions = 0
-	if Input.is_action_just_pressed("rotate_clockwise"):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_RIGHT):
 		var kickValues = getPosibleRotation(Direction.CLOCKWISE)
 		if kickValues != null:
 			rotatePiece(Direction.CLOCKWISE, kickValues)
 			sthHappened = true
 			actions += 1
-	if Input.is_action_just_pressed("rotate_anticlockwise"):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_LEFT):
 		var kickValues = getPosibleRotation(Direction.ANTICLOCKWISE)
 		if kickValues != null:
 			rotatePiece(Direction.ANTICLOCKWISE, kickValues)
 			sthHappened = true
 			actions += 1
-	if Input.is_action_just_pressed("swap_piece"):
+	if Input.is_action_just_pressed(TetrisControls.ACTION_HOLD):
 		if (!hasSwapped):
 			deletePieceFromGrid()
 			

@@ -52,6 +52,9 @@ var _active_popup: Control = null
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 
+	# Combat actions are registered from the active scheme before the board reads any input.
+	TetrisControls.apply()
+
 	var viewport_size: = get_viewport_rect().size
 
 	# A dark backdrop so the field map doesn't show through behind the board.
