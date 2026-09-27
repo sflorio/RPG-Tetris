@@ -1,44 +1,42 @@
-# Godot 4 Open RPG
+# RPG-Tetris
 
-![Godot Open RPG banner](media/Open-RPG.png)
+An RPG where every fight is resolved by playing Tetris.
 
-OpenRPG is a a demo showing how to create a classical turn-based RPG in Godot 4. It's currently a work-in-progress.
+Explore a Pokémon-style overworld; when you run into an enemy, a Tetris board
+opens instead of a turn-based battle screen. Clearing lines damages the enemies,
+combos multiply that damage, and the fight ends when every enemy is defeated —
+or when you top out.
 
-**You need to use Godot 4.6.2 to open the project!** You can find Godot 4.6.2 on the [Godot website](https://godotengine.org/).
+![Tetris battle](media/tetris_battle_screenshot.png)
 
-➡ Follow us on [Twitter](https://twitter.com/NathanGDQuest) and [YouTube](https://www.youtube.com/c/gdquest/) for Godot tips and tutorials! Get one of our [Godot game creation courses](https://www.gdquest.com/product/) to support our work on Free Software.
+## Running it
 
-## Project Goal
+Open the project in Godot and press F5, or:
 
-The goal of this project is to provide the gamedev community with a demo that shows one solid way to create and structure the code for a 2D RPG in Godot 4. You can reuse the code in your own projects, and also learn from the project's codebase.
+```bash
+"C:\Godot_v4.5-stable_mono_win64\Godot_v4.5-stable_mono_win64.exe" --path .
+```
 
-As we're teachers, our focus is on providing a learning resource that is both practical and educational. We're not trying to build a framework.
+Walk around town with the arrow keys or WASD, press Space to talk. Two
+encounters start a fight: the ghost blocking the south exit, and the NPC you can
+talk to.
 
-We're putting heavy emphasis on code that:
+## Combat in one line
 
-- Is updated to take advantage of what GDScript 4 has to offer.
-- Is accessible to users with solid code foundations. It should be a good starting point and reference for those diving into an RPG project.
-- Follows our [GDScript guidelines](https://gdquest.gitbook.io/gdquests-guidelines/godot-gdscript-guidelines).
+One cleared line = one damage. Multi-line clears, combos, repeated-piece streaks
+(three clears with the square doubles the damage), back-to-back Tetrises and
+perfect clears all multiply it.
 
-## Our Mission
+**See [TETRIS_INTEGRATION.md](TETRIS_INTEGRATION.md)** for the full damage model,
+how enemies get their health, and how to add new combo rules.
 
-Together, we're creating a codebase and tools to show you some good Godot practices to create:
+## Built on
 
-- Turn-based games.
-- A combat system.
-- An inventory system.
-- Character progression.
-- Maps with transitions, dialogues, grid-based movement, and more.
-- User interface with multiple menus.
+- [godot-open-rpg](https://github.com/gdquest-demos/godot-open-rpg) by GDQuest —
+  the overworld, grid movement, dialogue and encounter system (MIT).
+  Still available as the `upstream` remote.
+- [PokeTetris](https://github.com/jpcerrone/PokeTetris) by jpcerrone — the Tetris
+  board, SRS rotation and wall kicks (MIT).
+- [Dialogic](https://github.com/dialogic-godot/dialogic) for dialogue.
 
-And more! Do you want to contribute and improve your programming skills with Godot? Check out the open issues, suggest improvements and report bugs by opening new ones, and be sure to check the contributing guidelines below.
-
-## Credits
-
-The project uses the asset pack [Tiny Town by Kenney](https://kenney.nl/assets/tiny-town).
-
-## Contributing Guidelines
-
-All contributors are welcome 🙂. To ensure a smooth and a productive experience for everyone working together, we came up with some guidelines we all follow here.
-
-Check our [Contributors Guide](https://gdquest.gitbook.io/gdquests-guidelines/contributing-to-gdquest-projects/) for more information 😄
+Original licenses are kept in `LICENSE` and `CREDITS.md`.
