@@ -146,10 +146,17 @@ Worth keeping rather than rewriting:
 - [ ] Tune the damage formula — `attack_resolver.gd` is a first pass, since the
       vault specifies which attack fires but not the maths.
 
-### Phase 3 — second board
-- [ ] Split the board into a reusable component; instantiate two.
-- [ ] Enemy board driven by enemy actions (see open question 1).
-- [ ] Attacks target across boards.
+### Phase 3 — second board — **done**
+- [x] Two boards on screen: player left, enemy right, both seeded with junk.
+- [x] Enemy board is **scripted, not simulated** ([EnemyBoard]). Its stack shows how
+      close the next enemy attack is: it rises as they charge and drops when they strike.
+- [x] Enemies charge over Rounds and attack when their cast completes.
+- [x] Allies take damage, can be downed, and the battle is lost when the whole
+      active team is down (as well as on a top-out).
+- [x] Ally roster with health; enemy cast bars gated behind Future Sight, and the
+      enemy's next blocks behind Third Eye.
+- [ ] Enemy variety: every enemy currently uses a Basic Attack on a speed-derived
+      timer. Real attack tables, Techniques and status application come with Phase 4.
 
 ### Phase 4 — status effects and Xenoblocks
 - [ ] Effect framework ticking per round, with `-` / normal / `+` tiers.
@@ -165,11 +172,10 @@ Xenoshards, Psionic Powers, Field Actions, Campfires, Basecamp, Menus.
 
 ## 5. Open questions
 
-1. **Does the enemy board actually play Tetris?** This is the single biggest cost
-   in the project. A genuine enemy AI stacking pieces is a different scale of
-   work from a board that visually fills according to scripted enemy actions.
-   The vault says the enemy team "controls" the right board but never says who
-   places the pieces.
+1. ~~**Does the enemy board actually play Tetris?**~~ **Resolved: scripted.** The
+   enemy board is a readable picture of enemy pressure rather than a simulation.
+   The seam is one method (`EnemyBoard.set_charge`), so a real AI could drive the
+   same board later if it ever earns its cost.
 2. **Block Types per character.** With 3 active characters and 7 block types,
    how is the mapping decided — fixed per class, assigned by the player, or
    rotating? And what happens when a clear uses a block assigned to nobody?

@@ -32,13 +32,22 @@ is the default; switch with `TetrisControls.apply(TetrisControls.Scheme.KEYBOARD
 Rotate-left has no controller binding: the design assigns `A` to both rotate
 directions, which cannot work. Needs a decision.
 
-## The board
+## The two boards
 
-10 wide × 40 tall, lower 20 visible, upper 20 hidden and used to spawn blocks and
-junk. Junk rows are seeded at the start so combat never begins on an empty board.
+Both are 10 wide × 40 tall, lower 20 visible, upper 20 hidden for spawning. Junk
+rows are seeded on both at the start so neither begins empty.
 
-One completed drop is a **Round** (`Grid.round_finished`). That is the tick status
-effects and board timers will hang off.
+**Left is the player's** and is the one actually played.
+
+**Right is the enemy team's, and is scripted rather than simulated.** Nobody
+places pieces on it. Its stack is a readable picture of enemy pressure: it rises
+as the enemy team charges and drops back the Round they strike, so how full it
+looks tells you how close the next attack is. A genuine Tetris AI is far more work
+than the fight needs and the player never sees the difference. The seam is a single
+method (`EnemyBoard.set_charge`), so an AI could drive the same board later.
+
+One completed drop is a **Round** (`Grid.round_finished`). Enemies charge on Rounds
+and attack when their cast completes; it is also the tick status effects will use.
 
 Fall speed comes from the party's **Gravity** stat, not from the enemies present.
 
@@ -74,6 +83,15 @@ Assignable blocks (`O T J L S Z`) are dealt out across the active team, so with
 two allies one holds three each. The legend under the board shows the mapping and
 counts clears per block.
 
+## Enemy turns
+
+Each enemy charges over a number of Rounds and then attacks the front ally. Cast
+time is derived from the unit's speed — the design gives enemies cast bars but no
+cast-time stat, so that derivation is a placeholder in `tetris_battle_config.gd`.
+
+Allies take damage, can be downed, and the battle is **lost** when the whole active
+team is down or the player tops out.
+
 ## Enemy health is hidden by default
 
 Enemy bars read `???` and stay full until the **HP Sight** Psionic Power is
@@ -108,6 +126,8 @@ CombatArena (which Battlers)
 | `src/combat/union_meter.gd` | Union threshold and overflow bonus |
 | `src/combat/tetris_controls.gd` | Runtime input bindings for both schemes |
 | `src/combat/tetris_battle_config.gd` | Arena Battlers -> battle setup |
+| `src/combat/enemy_board.gd` | The scripted enemy board |
+| `src/combat/ui/ui_unit_roster.gd` | Roster for either team; health + cast bars |
 | `src/combat/tetris_battle.gd` | Wires it together |
 | `scr/Grid.gd` | The board. Emits `lines_cleared(count, block_type)` and `round_finished(n)` |
 | `scr/BlockTextures.gd` | Block sprites, generated in code |
@@ -143,6 +163,8 @@ Select the `Combat` node in `src/main.tscn` and untick **Use Tetris Combat**.
 
 ## Not done yet
 
-Single board only — the design calls for two, with the enemy team on its own
-board. Enemies never act. No status effects and no Xenoblocks. See
-[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §4 for the order.
+No status effects and no Xenoblocks — that is Phase 4, and most of those effects
+need board hooks (Shocked blocks rotation, Blind fogs a third of a board,
+Infection generates Xenoblocks). Enemies only use a Basic Attack on a timer; real
+attack tables and Techniques come with the same phase. See
+[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §4.

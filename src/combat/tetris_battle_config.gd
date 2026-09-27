@@ -60,6 +60,9 @@ static func from_arena(arena: PackedScene, party_stats: PartyStats = null) -> Te
 
 		var enemy: = CombatUnit.new(_build_stats(battler, enemy_name), false)
 		enemy.icon = _load_unit_icon(battler)
+		# Faster enemies act more often. The design gives enemies cast bars but no cast-time stat,
+		# so this is derived from speed and is a placeholder.
+		enemy.cast_rounds = clampi(roundi(120.0 / maxf(battler.stats.base_speed, 1.0)), 2, 8)
 		config.enemies.append(enemy)
 
 	for battler in roster.get_player_battlers():
