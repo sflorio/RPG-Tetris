@@ -24,6 +24,9 @@ const DESIGN_SIZE: = Vector2(600.0, 821.0)
 ## Blind fogs a third of the playfield, not a third of the whole board scene.
 const PLAYFIELD_RECT: = Rect2(139.0, 74.0, 322.0, 662.0)
 
+## The next-block column inside that scene, covered while Confused.
+const PREVIEW_RECT: = Rect2(470.0, 60.0, 130.0, 560.0)
+
 ## The board was laid out for Godot's default font size; the project theme uses a much larger one.
 const TETRIS_FONT_SIZE: = 18
 
@@ -82,6 +85,13 @@ var _is_over: = false
 ## Fog panels covering thirds of the player's board, shown by the Blind effect.
 var _fog_panels: Array[ColorRect] = []
 
+## Covers the next-block column while Confused, so the preview is visibly withheld rather than
+## simply missing.
+var _confusion_overlay: Control = null
+
+## Always-on list of the effects currently changing how the board plays.
+var _board_status: UIBoardStatus = null
+
 ## Scale applied to both board scenes, needed to place overlays on the playfield.
 var _board_scale: = 1.0
 
@@ -107,6 +117,8 @@ func _ready() -> void:
 	_add_union_meter()
 	_add_clear_tally(viewport_size)
 	_add_fog()
+	_add_confusion_overlay()
+	_add_board_status(viewport_size)
 	_add_flash(viewport_size)
 
 	_enemy_board.take_control()
@@ -146,6 +158,7 @@ func _add_boards(viewport_size: Vector2) -> void:
 	_grid.lines_cleared.connect(_on_lines_cleared)
 	_grid.round_finished.connect(_on_round_finished)
 	_grid.piece_rotated.connect(_on_piece_rotated)
+	_grid.rotation_blocked.connect(_on_rotation_blocked)
 	_grid.battle_finished.connect(_on_grid_battle_finished)
 	_apply_board_theme(_grid)
 	BoardSkin.apply(_grid)
@@ -241,6 +254,56 @@ func _add_fog() -> void:
 		add_child(fog)
 		_fog_panels.append(fog)
 
+		# Without a label the dark third just looks like a rendering fault.
+		var tag: = Label.new()
+		tag.text = "BLIND"
+		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		tag.size = fog.size
+		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tag.add_theme_font_size_override("font_size", 22)
+		tag.add_theme_color_override("font_color", Color(0.75, 0.55, 0.95))
+		fog.add_child(tag)
+
+
+# Confusion hides the upcoming blocks. Covering the column with a visible marker is clearer than
+# letting the previews disappear, which reads as them simply not being there.
+func _add_confusion_overlay() -> void:
+	_confusion_overlay = Control.new()
+	_confusion_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confusion_overlay.position = _player_board_rect.position + PREVIEW_RECT.position*_board_scale
+	_confusion_overlay.size = PREVIEW_RECT.size * _board_scale
+	_confusion_overlay.z_index = 6
+	_confusion_overlay.visible = false
+	add_child(_confusion_overlay)
+
+	var backdrop: = ColorRect.new()
+	backdrop.color = Color(0.05, 0.03, 0.10, 0.92)
+	backdrop.size = _confusion_overlay.size
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confusion_overlay.add_child(backdrop)
+
+	var marks: = Label.new()
+	marks.text = "?
+?
+?
+?
+?"
+	marks.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marks.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	marks.size = _confusion_overlay.size
+	marks.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	marks.add_theme_font_size_override("font_size", 40)
+	marks.add_theme_color_override("font_color", Color(0.75, 0.55, 0.95))
+	_confusion_overlay.add_child(marks)
+
+
+func _add_board_status(viewport_size: Vector2) -> void:
+	_board_status = UIBoardStatus.new()
+	_board_status.position = Vector2(_player_board_rect.position.x, BANNER_HEIGHT - 44.0)
+	_board_status.size = Vector2(_player_board_rect.size.x, 40.0)
+	add_child(_board_status)
+
 
 func _add_union_meter() -> void:
 	_union_ui = UIUnionMeter.new()
@@ -317,9 +380,21 @@ func _on_round_finished(_round_number: int) -> void:
 	if _is_over:
 		return
 
-	# Status effects tick once per Round, before anyone acts.
-	for unit in config.allies + config.enemies:
-		unit.tick_effects()
+	# Status effects tick once per Round, before anyone acts. The health change is captured so the
+	# player sees Poison and Renew actually land, rather than watching a bar move for no stated
+	# reason.
+	for i in config.allies.size():
+		var before: = config.allies[i].hp
+		config.allies[i].tick_effects()
+		var delta: = config.allies[i].hp - before
+		if delta != 0:
+			_ally_roster.play_tick(i, delta)
+	for i in config.enemies.size():
+		var before: = config.enemies[i].hp
+		config.enemies[i].tick_effects()
+		var delta: = config.enemies[i].hp - before
+		if delta != 0:
+			_enemy_roster.play_tick(i, delta)
 
 	# Haste guarantees the hasted ally's block comes next.
 	for ally in config.get_active_allies():
@@ -409,6 +484,20 @@ func _on_piece_rotated() -> void:
 			_end_battle(false)
 
 
+# Shocked refuses the input; saying so is what separates an effect from a bug.
+func _on_rotation_blocked() -> void:
+	if _is_over or is_instance_valid(_active_popup):
+		return
+
+	var popup: = UICombatPopup.new()
+	add_child(popup)
+	popup.play_notice(
+		"ROTATION LOCKED", "Shocked", Color(1.0, 0.75, 0.35), _player_board_rect
+	)
+	_active_popup = popup
+	_shake_screen(6.0)
+
+
 # Blind, Shocked and Confusion are carried by units but act on the board. Any afflicted ally
 # affects the whole team's board, which is the simplest reading of "some Unit Effects will affect
 # the Board".
@@ -428,8 +517,13 @@ func _refresh_board_effects() -> void:
 
 	_grid.rotation_locked = shocked
 	_grid.set_preview_visible(not confused)
+	if is_instance_valid(_confusion_overlay):
+		_confusion_overlay.visible = confused
 	for i in _fog_panels.size():
 		_fog_panels[i].visible = i in blinded_positions
+
+	if is_instance_valid(_board_status):
+		_board_status.refresh(config.allies)
 
 
 # The enemy board shows how close the most advanced enemy is to striking, so it rises as they

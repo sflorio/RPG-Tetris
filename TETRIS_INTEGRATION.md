@@ -204,6 +204,24 @@ so it is the single record of what the game is meant to have.
 **Compound effects**: applying Renew while Poisoned or Bleeding clears both, per
 the design's Compound Effects table.
 
+### Making them legible
+
+Each of these fails silently by nature, so each is announced where the player
+notices it:
+
+| Effect | What the player sees |
+|---|---|
+| Blind | The fogged third is labelled `BLIND`, not just dark |
+| Confusion | The preview column is covered with `?` marks rather than vanishing |
+| Shocked | Pressing rotate shows `ROTATION LOCKED — Shocked` and shakes the screen |
+| Poison / Renew | The health change floats off the unit each Round |
+| Infection | A `XENOBLOCK!` notice when a corrupted block is queued |
+
+On top of that, a strip above the board lists every effect currently changing how
+it plays, with rounds remaining and what it does — `BLIND+ 3 / board hidden`,
+`SHOCKED 3 / cannot rotate`. The call-outs fire once when an effect lands; the
+strip is what answers "why is my board like this?" at any moment afterwards.
+
 Blind, Shocked and Confusion are carried by units but act on the board. Any
 afflicted ally affects the whole team's board — the simplest reading of "some Unit
 Effects will affect the Board".

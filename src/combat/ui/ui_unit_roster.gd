@@ -160,6 +160,35 @@ func _refresh_effects(index: int) -> void:
 	label.add_theme_color_override("font_color", COLOR_DEBUFF if has_debuff else COLOR_BUFF)
 
 
+## Floats a health change over a unit, so per-Round damage and healing are seen landing rather than
+## inferred from a bar that moved. `delta` is negative for damage, positive for healing.
+func play_tick(index: int, delta: int) -> void:
+	if index < 0 or index >= _rows.size() or delta == 0:
+		return
+
+	var label: = Label.new()
+	label.text = ("%d" % delta) if delta < 0 else ("+%d" % delta)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", 26)
+	label.add_theme_color_override(
+		"font_color", Color(0.55, 0.95, 0.65) if delta > 0 else Color(1.0, 0.45, 0.45)
+	)
+	label.add_theme_constant_override("outline_size", 6)
+	label.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.05, 0.95))
+
+	var row: = _rows[index]
+	label.position = Vector2(row.size.x - 70.0, 0.0)
+	label.size = Vector2(64.0, 30.0)
+	label.z_index = 10
+	row.add_child(label)
+
+	var tween: = create_tween().set_parallel()
+	tween.tween_property(label, "position:y", -26.0, 0.8)
+	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.25)
+	tween.chain().tween_callback(label.queue_free)
+
+
 ## Updates just the cast bars, after a Round has advanced.
 func refresh_casts() -> void:
 	for i in _units.size():

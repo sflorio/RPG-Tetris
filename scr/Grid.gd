@@ -54,6 +54,10 @@ signal piece_rotated
 ## While true the team cannot rotate their active block. Set by the Shocked status effect.
 var rotation_locked: bool = false
 
+## Emitted when the player tries to rotate while Shocked. Without this the input simply does
+## nothing, which reads as the game being broken rather than as an effect.
+signal rotation_blocked
+
 ## Emitted after every completed block drop. One drop is one Round in the design's terms, and is
 ## what status effects, damage-over-time and board timers tick on.
 signal round_finished(round_number: int)
@@ -241,6 +245,10 @@ func _physics_process(delta):
 		sthHappened = true
 		timer=0
 		actions = 0
+	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_RIGHT) and rotation_locked:
+		rotation_blocked.emit()
+	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_LEFT) and rotation_locked:
+		rotation_blocked.emit()
 	if Input.is_action_just_pressed(TetrisControls.ACTION_ROTATE_RIGHT) and not rotation_locked:
 		var kickValues = getPosibleRotation(Direction.CLOCKWISE)
 		if kickValues != null:
