@@ -463,7 +463,9 @@ func spawnPiece():
 	var spawnIn = 1
 	var startingX = (gridWidth - currentPiece.shape[0].size())/2
 	for i in range(currentPiece.shape.size()):
-		if currentPiece.shape[i][2] != 0 && grid[startingX + i][vanishZone] != 0:
+		# Probe the same row the original did, clamped so a larger Xenoblock box cannot overrun it.
+		var probe_row: int = mini(2, currentPiece.shape[i].size() - 1)
+		if currentPiece.shape[i][probe_row] != 0 && grid[startingX + i][vanishZone] != 0:
 			spawnIn = 0
 			break;
 	currentPiece.positionInGrid = Vector2(

@@ -5,7 +5,7 @@
 ## preview and ghost piece updates.
 ##
 ## Colour indices match [Constants]: 1 = I, 2 = J, 3 = L, 4 = O, 5 = T, 6 = Z, 7 = S. Index 0 is an
-## empty cell.
+## empty cell, and 8 is a Xenoblock (see [XenoBlocks]).
 extends Node
 
 ## Pixel size of one block texture. The board draws these at 2x, filling its 32px cells.
@@ -32,6 +32,7 @@ const PIECE_COLORS: = {
 	5: Color("a855f7"),  # T - purple
 	6: Color("ef4444"),  # Z - red
 	7: Color("22c55e"),  # S - green
+	8: Color("8b1f6b"),  # Xenoblock - corrupted magenta, deliberately unlike any normal block
 }
 
 ## Colour of the faint grid square drawn in empty cells.

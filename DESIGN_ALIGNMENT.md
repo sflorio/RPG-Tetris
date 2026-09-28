@@ -170,9 +170,17 @@ Worth keeping rather than rewriting:
 - [ ] **Per-block effects** — Golden, Charged, Burning, Frozen, Thorned. All five
       need the board to store a *state per cell* alongside its colour, which is a
       change to `Grid` itself. That is the next meaningful chunk.
-- [ ] **Xenoblocks**, and therefore Infection. The vault defines the malformed
-      shapes only as images, so the actual cell layouts have to be specified
-      before they can be built — see §5.
+- [x] **Xenoblock space and rotation.** Settled against SRS: wall kicks are a
+      property of the bounding box and rotation centre, never of which cells are
+      filled, so a Xenoblock needs no rotation code of its own. `scr/XenoBlocks.gd`
+      holds the shapes; the board's existing `getPosibleRotation` already picks
+      the kick table by box size. Verified with a real wall kick on a J+.
+- [x] **The `-` forms are decoded.** The vault reuses artwork across them
+      (O-=L-, T-=Z-, J-=S-), which means they are trominoes — every `-` except
+      `I-` is the same L-tromino at a different spawn orientation.
+- [ ] **`+` shapes are placeholders** and **`#` shapes are unspecified.** These are
+      the last thing blocked on the design rather than on code — see §5.
+- [ ] **Infection**, which needs the above.
 
 ### Phase 5 — meta systems
 Techniques/TP, Rally Strikes, Soul Gems, Trinkets, Constellations + Stars,
@@ -194,9 +202,12 @@ Xenoshards, Psionic Powers, Field Actions, Campfires, Basecamp, Menus.
    *rotate* in the other.
 4. **Square strength.** `Raw Ideas` floats "all pieces except Square can clear 3+
    lines" and "Square pieces are naturally a bit stronger". Is that settled?
-5. **Xenoblock shapes.** The Boards note gives each variant (`O+`, `T#`, `J-` …)
-   as a screenshot, so the cell layouts cannot be read from the vault. They need
-   writing down as coordinates before Xenoblocks or Infection can be built.
+5. **Xenoblock cell layouts.** Rotation is solved; the shapes are not. The `-`
+   forms were recoverable from the vault's reused artwork (they are trominoes),
+   and the `+` forms are in as reasonable pentominoes, but both want confirming
+   against the design's images. **The `#` forms cannot be guessed at all** — they
+   exist only for T/J/L/S/Z, no two share artwork, and nothing in the text says
+   what `#` corrupts. Those need writing down as filled cells in a 3x3 or 4x4 box.
 6. **Whose board does a unit effect fog?** Blind is a Unit Effect whose effect is
    on the board. Currently any afflicted ally fogs a third of the team's board,
    picked by that ally's position in the team. Worth confirming that reading.
