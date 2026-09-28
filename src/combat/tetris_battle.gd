@@ -328,6 +328,8 @@ func _on_round_finished(_round_number: int) -> void:
 			ally.consume_generation(StatusEffectDefs.HASTE)
 			break
 
+	_apply_infection()
+
 	_ally_roster.refresh()
 	_enemy_roster.refresh()
 	_refresh_board_effects()
@@ -346,6 +348,53 @@ func _on_round_finished(_round_number: int) -> void:
 
 	if not attackers.is_empty():
 		_resolve_enemy_attacks(attackers)
+
+
+# Infection corrupts the team's block supply: each infected ally rolls once per Round to push a
+# Xenoblock onto the board. Several infected allies stack the odds, exactly as the design describes.
+#
+# Only the player's side is wired up. Infected enemies would corrupt their own board, but that board
+# is scripted rather than simulated, so there is no block supply to corrupt.
+func _apply_infection() -> void:
+	var pushed: = 0
+	for ally in config.get_active_allies():
+		if not ally.has_effect(StatusEffectDefs.INFECTION):
+			continue
+		if randf() >= StatusEffectDefs.XENOBLOCK_CHANCE:
+			continue
+
+		var shape: = _pick_xenoblock()
+		if shape.is_empty():
+			continue
+		_grid.force_next_shape(shape)
+		pushed += 1
+
+	if pushed > 0:
+		_announce_xenoblock(pushed)
+
+
+# Any corrupted form of any block, drawn evenly.
+func _pick_xenoblock() -> Array:
+	var available: = XenoBlocks.get_available()
+	if available.is_empty():
+		return []
+	var pick: Dictionary = available.pick_random()
+	return XenoBlocks.get_shape(pick.block_type, pick.form)
+
+
+func _announce_xenoblock(count: int) -> void:
+	await get_tree().create_timer(STATUS_POPUP_DELAY).timeout
+	if _is_over or not is_inside_tree():
+		return
+
+	var popup: = UICombatPopup.new()
+	add_child(popup)
+	popup.play_notice(
+		"XENOBLOCK!",
+		"corrupted block incoming" if count == 1 else "%d corrupted blocks incoming" % count,
+		Color("c65cff"),
+		_player_board_rect
+	)
 
 
 # Bleed costs health every time the team rotates a block.

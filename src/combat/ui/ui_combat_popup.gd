@@ -115,6 +115,24 @@ func play_status(applied: Array[StatusEffect], unit: CombatUnit, rect: Rect2) ->
 	_animate(AttackResolver.Kind.SPECIAL, false)
 
 
+## Announces something that is neither an attack nor a status change, such as Infection pushing a
+## Xenoblock onto the board.
+func play_notice(headline: String, subtitle: String, color: Color, rect: Rect2) -> void:
+	_font = load(FONT_BOLD)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	z_index = 20
+	position = Vector2(rect.position.x, rect.get_center().y + 90.0)
+	size = Vector2(rect.size.x, 140.0)
+
+	add_child(_build_label(headline, NAME_FONT_SIZE - 6, NAME_OUTLINE, color, 0.0))
+	if not subtitle.is_empty():
+		add_child(_build_label(
+			subtitle, DETAIL_FONT_SIZE, DETAIL_OUTLINE, Color("cbd5e1"), NAME_FONT_SIZE + 4.0
+		))
+
+	_animate(AttackResolver.Kind.SPECIAL, false)
+
+
 # A hard scale punch, a settle, then a drift upward as it fades. The heavier the attack, the more
 # it overshoots and the longer it lingers.
 func _animate(kind: int, missed: bool) -> void:

@@ -140,8 +140,16 @@ func _spawn_line_flash(row: int, intensity: float) -> void:
 ## Puts a block of `block_type` at the front of the queue, so it is guaranteed to come next.
 ## Used by the Haste status effect.
 func force_next_block(block_type: int) -> void:
+	force_next_shape(Constants.SHAPES[clampi(block_type - 1, 0, Constants.SHAPES.size() - 1)])
+
+
+## Puts an arbitrary shape at the front of the queue. Used by Infection to push a Xenoblock in;
+## the shape is any square matrix, so it rotates and kicks by its box size like anything else.
+func force_next_shape(shape: Array) -> void:
+	if shape.is_empty():
+		return
 	var piece = Piece.new()
-	piece.shape = Constants.SHAPES[clampi(block_type - 1, 0, Constants.SHAPES.size() - 1)]
+	piece.shape = shape
 	currentBag.push_front(piece)
 	$UI/NextPieces.drawPieces(currentBag, nextBag)
 

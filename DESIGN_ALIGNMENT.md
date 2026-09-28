@@ -158,7 +158,7 @@ Worth keeping rather than rewriting:
 - [ ] Enemy variety: every enemy currently uses a Basic Attack on a speed-derived
       timer. Real attack tables, Techniques and status application come with Phase 4.
 
-### Phase 4 — status effects and Xenoblocks — **framework done, 9 of 14 effects live**
+### Phase 4 — status effects and Xenoblocks — **framework done, 10 of 14 effects live**
 - [x] Effect framework with `-` / normal / `+` tiers, ticking once per Round.
 - [x] Compound effects: Renew cancels with Bleed and with Poison, clearing both.
 - [x] Shield (halves damage, consumed by stack), Renew, Poison, Bleed (on every
@@ -182,9 +182,10 @@ Worth keeping rather than rewriting:
       seven `+`, five `#` (the design lists none for I or O) and the shared `-`
       trominoes. Every one verified to keep its cell count and box size through a
       full rotation cycle, and to rotate on the live board.
-- [ ] **Infection**, which is now unblocked: roll 30% per infected unit, pick a
-      Xenoblock, and push it into the bag — the bag injection already exists from
-      Haste (`Grid.force_next_block`).
+- [x] **Infection.** Each infected ally rolls 30% per Round to push a Xenoblock
+      into the block queue, so several infected allies stack the odds. Measured at
+      32% over 200 rounds. Only the player's side is wired: an infected enemy would
+      corrupt its own board, but that board is scripted and has no block supply.
 
 ### Phase 5 — meta systems
 Techniques/TP, Rally Strikes, Soul Gems, Trinkets, Constellations + Stars,

@@ -57,8 +57,8 @@ const DEFS: = {
 		"note": "Loses a percentage of current HP each time a block is rotated.",
 	},
 	INFECTION: {
-		"positive": false, "implemented": false, "rounds": {-1: 3, 0: 5, 1: 7},
-		"note": "30% chance per infected unit to generate a Xenoblock. Needs Xenoblocks.",
+		"positive": false, "implemented": true, "rounds": {-1: 3, 0: 5, 1: 7},
+		"note": "30% chance per infected unit to generate a Xenoblock on that team's board.",
 	},
 	SHOCKED: {
 		"positive": false, "implemented": true, "rounds": {-1: 1, 0: 3, 1: 5},
@@ -120,8 +120,11 @@ const STACK_BASED: Array[String] = [SHIELD]
 ## "Block generations", so it is spent when it forces a block, not by the Round tick.
 const GENERATION_BASED: Array[String] = [HASTE]
 
+## Chance, per infected unit per Round, that Infection pushes a Xenoblock onto that team's board.
+const XENOBLOCK_CHANCE: = 0.30
+
 ## Negative effects an enemy can inflict today. Used to pick one at random when an attack lands.
-const ENEMY_INFLICTABLE: Array[String] = [POISON, BLEED, BLIND, SHOCKED, CONFUSION]
+const ENEMY_INFLICTABLE: Array[String] = [POISON, BLEED, BLIND, SHOCKED, CONFUSION, INFECTION]
 
 ## Effects that act on the whole board rather than on one unit's body.
 const BOARD_SCOPED: Array[String] = [BLIND, SHOCKED, CONFUSION]

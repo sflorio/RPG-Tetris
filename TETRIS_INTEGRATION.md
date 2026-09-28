@@ -171,7 +171,14 @@ shared `-` trominoes. Each is verified to keep its cell count and box size throu
 a full rotation cycle and to rotate on the live board.
 
 Corrupted blocks use colour index **8**, painted a magenta deliberately unlike any
-normal block.
+normal block, so one arriving in the Next queue is unmistakable.
+
+**Infection** is what puts them there: each infected ally rolls once per Round, so
+two infected allies corrupt the queue roughly twice as often. A `XENOBLOCK!` notice
+fires when one is pushed, for the same reason the status call-outs exist — a
+misshapen piece appearing with no explanation is exactly the confusion the Blind
+fog caused. Injection goes through `Grid.force_next_shape`, the same queue
+mechanism Haste uses.
 
 ## Status effects
 
@@ -190,7 +197,7 @@ so it is the single record of what the game is meant to have.
 | Blind | Fogs a third of the playfield | yes |
 | Shocked | The team cannot rotate | yes |
 | Confusion | Hides the block preview | yes |
-| Infection | Generates Xenoblocks | needs Xenoblocks |
+| Infection | 30% per infected ally per Round to push a Xenoblock into the queue | yes |
 | Golden / Charged | Clearing heals / restores TP | needs per-block state |
 | Burning / Frozen / Thorned | Blocks decay / clear twice / hurt you | needs per-block state |
 
