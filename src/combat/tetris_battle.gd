@@ -48,6 +48,17 @@ const ENEMY_STATUS_CHANCE: = 0.18
 ## Delay before a status call-out follows the damage number, so the two are read in order.
 const STATUS_POPUP_DELAY: = 0.45
 
+## Screen shake in pixels for the lightest and heaviest attacks.
+const SHAKE_MIN: = 4.0
+const SHAKE_MAX: = 22.0
+
+## Screen flash colour per attack weight. A Union Assault washes the screen; a jab does not flash.
+const FLASH_COLORS: = {
+	AttackResolver.Kind.SPECIAL_BOOSTED: Color(0.55, 0.45, 1.0),
+	AttackResolver.Kind.RALLY_STRIKE: Color(1.0, 0.85, 0.35),
+	AttackResolver.Kind.UNION_ASSAULT: Color(1.0, 0.35, 0.45),
+}
+
 ## Who is fighting and how the boards start. Assign before adding this node to the tree.
 var config: = TetrisBattleConfig.new()
 
@@ -74,6 +85,9 @@ var _fog_panels: Array[ColorRect] = []
 ## Scale applied to both board scenes, needed to place overlays on the playfield.
 var _board_scale: = 1.0
 
+## Full-screen rectangle used for impact flashes.
+var _flash: ColorRect = null
+
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -93,6 +107,7 @@ func _ready() -> void:
 	_add_union_meter()
 	_add_clear_tally(viewport_size)
 	_add_fog()
+	_add_flash(viewport_size)
 
 	_enemy_board.take_control()
 	_refresh_board_effects()
@@ -195,6 +210,16 @@ func _add_rosters() -> void:
 		config.party.has_power(PartyStats.HP_SIGHT),
 		config.party.has_power(PartyStats.FUTURE_SIGHT)
 	)
+
+
+# The impact flash sits above everything and is transparent until something lands.
+func _add_flash(viewport_size: Vector2) -> void:
+	_flash = ColorRect.new()
+	_flash.color = Color(1, 1, 1, 0)
+	_flash.size = viewport_size
+	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flash.z_index = 30
+	add_child(_flash)
 
 
 # Blind hides a third of the board. Which third depends on the blinded unit's position in the
@@ -426,6 +451,7 @@ func _apply_results(
 
 	if not results.is_empty():
 		_show_attack_popup(results, total_damage, popup_rect)
+		_play_impact(results)
 
 
 static func _get_front_unit(units: Array[CombatUnit]) -> CombatUnit:
@@ -463,6 +489,51 @@ func _announce_status(
 	var popup: = UICombatPopup.new()
 	add_child(popup)
 	popup.play_status(applied, unit, rect)
+
+
+# Shakes the screen and, for a heavy attack, washes it with colour. Scaled by the weight of the
+# attack so a Union Assault reads as an event and a jab does not.
+func _play_impact(results: Array[AttackResult]) -> void:
+	var heaviest: = AttackResolver.Kind.BASIC
+	var landed: = false
+	for result in results:
+		if not result.was_dodged:
+			landed = true
+			if result.kind > heaviest:
+				heaviest = result.kind
+	if not landed:
+		return
+
+	var weight: = float(heaviest) / float(AttackResolver.Kind.UNION_ASSAULT)
+	_shake_screen(lerpf(SHAKE_MIN, SHAKE_MAX, weight))
+
+	if FLASH_COLORS.has(heaviest):
+		# Kept low: the flash covers the rosters and tallies too, so a strong wash makes the whole
+		# HUD unreadable for a moment rather than punctuating the hit.
+		_flash_screen(FLASH_COLORS[heaviest], 0.06 + weight*0.10)
+
+
+func _shake_screen(strength: float) -> void:
+	var tween: = create_tween()
+	var steps: = [
+		Vector2(-strength, strength*0.4),
+		Vector2(strength*0.8, -strength*0.3),
+		Vector2(-strength*0.5, strength*0.2),
+		Vector2(strength*0.25, 0.0),
+	]
+	for offset in steps:
+		tween.tween_property(self, "position", offset, 0.035)
+	tween.tween_property(self, "position", Vector2.ZERO, 0.04)
+
+
+func _flash_screen(color: Color, peak_alpha: float) -> void:
+	if not is_instance_valid(_flash):
+		return
+	_flash.color = Color(color.r, color.g, color.b, 0.0)
+
+	var tween: = create_tween()
+	tween.tween_property(_flash, "color:a", peak_alpha, 0.05)
+	tween.tween_property(_flash, "color:a", 0.0, 0.35).set_trans(Tween.TRANS_CUBIC)
 
 
 func _show_attack_popup(

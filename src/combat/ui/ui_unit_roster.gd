@@ -203,16 +203,27 @@ func play_hit(index: int) -> void:
 		_play_downed(index)
 
 
-# A downed unit slumps: the row fades back and the portrait desaturates.
+# A downed unit goes out with a flash before dissolving away, rather than just dimming.
 func _play_downed(index: int) -> void:
 	_name_labels[index].text = "%s  DOWN" % _units[index].display_name
 	_name_labels[index].add_theme_color_override("font_color", COLOR_DOWNED)
 	_cast_bars[index].visible = false
 
+	var icon: = _icons[index]
+
+	# Blow out to white, hang for a beat, then dissolve.
+	var flash: = create_tween()
+	flash.tween_property(icon, "modulate", Color(6.0, 6.0, 6.0), 0.07)
+	flash.tween_property(icon, "modulate", Color(3.0, 3.0, 3.0), 0.10)
+	await flash.finished
+
 	var fade: = create_tween().set_parallel()
-	fade.tween_property(_rows[index], "modulate:a", 0.4, 0.4)
-	fade.tween_property(_icons[index], "modulate", Color(0.4, 0.4, 0.45), 0.4)
+	fade.tween_property(_rows[index], "modulate:a", 0.35, 0.45)
+	fade.tween_property(icon, "modulate", Color(0.35, 0.35, 0.42), 0.45)
+	fade.tween_property(icon, "position", Vector2(0.0, 10.0), 0.45)		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	await fade.finished
+
+	icon.position = Vector2.ZERO
 	refresh()
 
 

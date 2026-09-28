@@ -120,6 +120,21 @@ attack reads `MISS`. Heavier attacks overshoot further on the scale punch, shake
 on impact and hold longer before drifting off. All of it is in
 `src/combat/ui/ui_attack_popup.gd`.
 
+**Impact effects.** Borrowed in spirit from SNES-era JRPG combat — Chrono Trigger
+in particular, whose Dual and Triple Techs are the same idea as Rally Strikes and
+the Union Assault. All of it is drawn in code; no third-party art is used.
+
+| Effect | Where |
+|---|---|
+| Cleared rows flash and expand, harder for a bigger clear | `Grid._spawn_line_flash` |
+| Screen shake scaled to the attack's weight | `TetrisBattle._shake_screen` |
+| Screen wash on Special+50%, Rally Strike and Union Assault | `TetrisBattle._flash_screen` |
+| Defeated units blow out white, then dissolve and sink | `UIUnitRoster._play_downed` |
+
+The screen flash is deliberately weak (peak alpha ~0.13). It covers the rosters
+and tally as well as the boards, so a strong wash blanks the HUD instead of
+punctuating the hit.
+
 **Board style.** `BoardSkin` restyles each board instance at runtime: the red
 pixel frame and the Kremlin are hidden, backgrounds go dark slate, the Hold/Next/
 Score frames are dropped, and the DOS pixel font is swapped for Roboto Bold. The

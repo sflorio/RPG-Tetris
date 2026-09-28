@@ -117,6 +117,26 @@ func _ready():
 	drawGrid()
 	drawDroppingPoint()
 
+# A bright bar left where a line was, expanding and fading. `intensity` runs 0..1 with the size of
+# the clear, so four lines flash far harder than one.
+func _spawn_line_flash(row: int, intensity: float) -> void:
+	var bar := ColorRect.new()
+	bar.color = Color(1.0, 1.0, 1.0, 0.85)
+	bar.size = Vector2(gridWidth*spriteSize, spriteSize)
+	bar.position = Vector2(gridOffsetX, row*spriteSize + gridOffsetY)
+	bar.pivot_offset = bar.size * 0.5
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Above the blocks, which are plain Sprite2D children.
+	bar.z_index = 3
+	add_child(bar)
+
+	var duration := 0.20 + intensity*0.22
+	var tween := create_tween().set_parallel()
+	tween.tween_property(bar, "modulate:a", 0.0, duration)
+	tween.tween_property(bar, "scale", Vector2(1.0, 1.0 + intensity*2.2), duration)		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_callback(bar.queue_free)
+
+
 ## Puts a block of `block_type` at the front of the queue, so it is guaranteed to come next.
 ## Used by the Haste status effect.
 func force_next_block(block_type: int) -> void:
@@ -368,6 +388,7 @@ func checkGameOver():
 
 func checkAndClearFullLines() -> int:
 	var cleared = 0
+	var cleared_rows: Array[int] = []
 	for y in range(gridHeight):
 		var fullLine = true
 		for x in range(gridWidth):
@@ -376,6 +397,7 @@ func checkAndClearFullLines() -> int:
 				break;
 		if fullLine:
 			cleared+=1
+			cleared_rows.append(y)
 			#Clear line
 			for x in range(gridWidth):
 				grid[x][y] = 0
@@ -393,6 +415,10 @@ func checkAndClearFullLines() -> int:
 			particle.setBoxRange(spriteSize*gridWidth/2.0)
 			add_child(particle)
 			particle.emit()
+	# RPG integration: the board itself reacts to a clear, so a Tetris does not look like a single.
+	for row in cleared_rows:
+		_spawn_line_flash(row, float(cleared) / 4.0)
+
 	#Scoring
 	if cleared != 0:
 		var newScore
