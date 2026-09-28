@@ -178,9 +178,13 @@ Worth keeping rather than rewriting:
 - [x] **The `-` forms are decoded.** The vault reuses artwork across them
       (O-=L-, T-=Z-, J-=S-), which means they are trominoes — every `-` except
       `I-` is the same L-tromino at a different spawn orientation.
-- [ ] **`+` shapes are placeholders** and **`#` shapes are unspecified.** These are
-      the last thing blocked on the design rather than on code — see §5.
-- [ ] **Infection**, which needs the above.
+- [x] **All 19 Xenoblock shapes are in**, read off the design's shape table:
+      seven `+`, five `#` (the design lists none for I or O) and the shared `-`
+      trominoes. Every one verified to keep its cell count and box size through a
+      full rotation cycle, and to rotate on the live board.
+- [ ] **Infection**, which is now unblocked: roll 30% per infected unit, pick a
+      Xenoblock, and push it into the bag — the bag injection already exists from
+      Haste (`Grid.force_next_block`).
 
 ### Phase 5 — meta systems
 Techniques/TP, Rally Strikes, Soul Gems, Trinkets, Constellations + Stars,
@@ -202,12 +206,10 @@ Xenoshards, Psionic Powers, Field Actions, Campfires, Basecamp, Menus.
    *rotate* in the other.
 4. **Square strength.** `Raw Ideas` floats "all pieces except Square can clear 3+
    lines" and "Square pieces are naturally a bit stronger". Is that settled?
-5. **Xenoblock cell layouts.** Rotation is solved; the shapes are not. The `-`
-   forms were recoverable from the vault's reused artwork (they are trominoes),
-   and the `+` forms are in as reasonable pentominoes, but both want confirming
-   against the design's images. **The `#` forms cannot be guessed at all** — they
-   exist only for T/J/L/S/Z, no two share artwork, and nothing in the text says
-   what `#` corrupts. Those need writing down as filled cells in a 3x3 or 4x4 box.
+5. ~~**Xenoblock cell layouts.**~~ **Resolved** from the design's shape table. All
+   19 forms are encoded in `scr/XenoBlocks.gd`. They were transcribed from a
+   rendering of that table rather than from the source images, so they are worth a
+   glance if any shape looks wrong in play.
 6. **Whose board does a unit effect fog?** Blind is a Unit Effect whose effect is
    on the board. Currently any afflicted ally fogs a third of the team's board,
    picked by that ally's position in the team. Worth confirming that reading.

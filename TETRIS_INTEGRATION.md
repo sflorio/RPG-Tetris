@@ -165,9 +165,10 @@ them — `O-`=`L-`, `T-`=`Z-`, `J-`=`S-`. Removing a cell from a tetromino leave
 tromino and there are only two, so every `-` except `I-` is the same L-tromino at a
 different spawn orientation; `I-` is the straight one.
 
-**Still open:** the `+` shapes are plausible pentominoes but unconfirmed, and the
-`#` shapes are not defined at all — nothing in the vault says what `#` corrupts.
-`XenoBlocks.has_form()` reports false for those.
+**All 19 forms are encoded**: seven `+` pentominoes, five `#` (the design lists
+none for I or O, and `XenoBlocks.has_form()` reports false for those) and the
+shared `-` trominoes. Each is verified to keep its cell count and box size through
+a full rotation cycle and to rotate on the live board.
 
 Corrupted blocks use colour index **8**, painted a magenta deliberately unlike any
 normal block.

@@ -26,20 +26,18 @@ const XENO: = 8
 
 # --- MINUS: the block with a cell taken away ---------------------------------------------------
 #
-# Removing one cell from a tetromino leaves a tromino, and there are only two of those. That is
-# borne out by the vault, where the `-` artwork is reused across pieces: O- and L- share an image,
-# T- and Z- share one, J- and S- share one. So every `-` form except I- is the same L-tromino,
-# differing only in the orientation it spawns at — and orientation is not a distinct piece once it
-# can rotate.
+# Confirmed against the design's shape table: every `-` form is a tromino, and the vault reuses the
+# same artwork across them (O-=L-, T-=Z-, J-=S-). Only two trominoes exist, so all the bent ones are
+# the same piece at a different spawn orientation.
 
 ## L-tromino. The `-` form of O, T, J, L, S and Z.
 const TROMINO_CORNER: = [
 	[XENO, XENO, 0],
-	[0, XENO, 0],
+	[XENO, 0, 0],
 	[0, 0, 0],
 ]
 
-## Straight tromino. The `-` form of I, which cannot lose a cell and stay bent.
+## Straight tromino. The `-` form of I.
 const TROMINO_LINE: = [
 	[0, XENO, 0],
 	[0, XENO, 0],
@@ -47,74 +45,114 @@ const TROMINO_LINE: = [
 ]
 
 # --- PLUS: the block with an extra cell ---------------------------------------------------------
-#
-# Adding a cell makes a pentomino. Each one is distinct in the vault, so each gets its own shape.
-# These are placeholders until the cell layouts are read off the design's images.
 
+## I with a cell budding off its side. 4x4 box, so it keeps I-family kicks.
+const I_PLUS: = [
+	[XENO, XENO, XENO, XENO],
+	[0, XENO, 0, 0],
+	[0, 0, 0, 0],
+	[0, 0, 0, 0],
+]
+
+## The square with a cell stacked on one corner. 4x4 box.
+const O_PLUS: = [
+	[0, 0, 0, 0],
+	[XENO, XENO, XENO, 0],
+	[0, XENO, XENO, 0],
+	[0, 0, 0, 0],
+]
+
+## T with the fourth arm filled in: the plus-pentomino.
 const T_PLUS: = [
 	[0, XENO, 0],
 	[XENO, XENO, XENO],
 	[0, XENO, 0],
 ]
 
+## U-pentomino.
 const J_PLUS: = [
-	[XENO, XENO, 0],
-	[0, XENO, 0],
-	[0, XENO, XENO],
+	[XENO, 0, XENO],
+	[XENO, XENO, XENO],
+	[0, 0, 0],
 ]
 
+## P-pentomino.
 const L_PLUS: = [
+	[XENO, XENO, XENO],
 	[0, XENO, XENO],
-	[0, XENO, 0],
-	[XENO, XENO, 0],
+	[0, 0, 0],
 ]
 
+## S stretched by one cell.
 const S_PLUS: = [
 	[0, XENO, XENO],
 	[XENO, XENO, 0],
 	[XENO, 0, 0],
 ]
 
+## Z stretched by one cell.
 const Z_PLUS: = [
 	[XENO, 0, 0],
 	[XENO, XENO, 0],
 	[0, XENO, XENO],
 ]
 
-## O and I are 4x4 pieces, so their corrupted forms stay in a 4x4 box and keep I-family kicks.
-const O_PLUS: = [
-	[0, 0, 0, 0],
-	[0, XENO, XENO, XENO],
-	[0, XENO, XENO, 0],
-	[0, 0, 0, 0],
+# --- HASH: the block warped rather than grown or shrunk -----------------------------------------
+#
+# Only T, J, L, S and Z have a `#`; the design lists I# and O# as "None."
+
+## T with a longer stem.
+const T_HASH: = [
+	[XENO, 0, 0],
+	[XENO, XENO, XENO],
+	[XENO, 0, 0],
 ]
 
-const I_PLUS: = [
-	[0, XENO, 0, 0],
-	[0, XENO, XENO, 0],
-	[0, XENO, 0, 0],
-	[0, XENO, 0, 0],
+## J bent the other way.
+const J_HASH: = [
+	[0, XENO, XENO],
+	[XENO, XENO, 0],
+	[XENO, 0, 0],
 ]
 
-## Shapes per block type and form. A missing entry means that form does not exist for that block —
-## the design gives no `#` for I or O — or that its layout has not been specified yet.
+## L bent the other way.
+const L_HASH: = [
+	[XENO, 0, 0],
+	[XENO, XENO, 0],
+	[0, XENO, XENO],
+]
+
+## S with its step extended.
+const S_HASH: = [
+	[0, 0, XENO],
+	[XENO, XENO, XENO],
+	[XENO, 0, 0],
+]
+
+## Z with its step extended.
+const Z_HASH: = [
+	[XENO, 0, 0],
+	[XENO, XENO, XENO],
+	[0, 0, XENO],
+]
+
+## Shapes per block type and form. The design lists no `#` for I or O.
 const SHAPES: = {
 	BlockTypes.I: {Form.PLUS: I_PLUS, Form.MINUS: TROMINO_LINE},
 	BlockTypes.O: {Form.PLUS: O_PLUS, Form.MINUS: TROMINO_CORNER},
-	BlockTypes.T: {Form.PLUS: T_PLUS, Form.MINUS: TROMINO_CORNER},
-	BlockTypes.J: {Form.PLUS: J_PLUS, Form.MINUS: TROMINO_CORNER},
-	BlockTypes.L: {Form.PLUS: L_PLUS, Form.MINUS: TROMINO_CORNER},
-	BlockTypes.S: {Form.PLUS: S_PLUS, Form.MINUS: TROMINO_CORNER},
-	BlockTypes.Z: {Form.PLUS: Z_PLUS, Form.MINUS: TROMINO_CORNER},
+	BlockTypes.T: {Form.PLUS: T_PLUS, Form.HASH: T_HASH, Form.MINUS: TROMINO_CORNER},
+	BlockTypes.J: {Form.PLUS: J_PLUS, Form.HASH: J_HASH, Form.MINUS: TROMINO_CORNER},
+	BlockTypes.L: {Form.PLUS: L_PLUS, Form.HASH: L_HASH, Form.MINUS: TROMINO_CORNER},
+	BlockTypes.S: {Form.PLUS: S_PLUS, Form.HASH: S_HASH, Form.MINUS: TROMINO_CORNER},
+	BlockTypes.Z: {Form.PLUS: Z_PLUS, Form.HASH: Z_HASH, Form.MINUS: TROMINO_CORNER},
 }
 
 ## Suffix per form, matching how the design writes them.
 const FORM_SUFFIX: = {Form.PLUS: "+", Form.HASH: "#", Form.MINUS: "-"}
 
 
-## The shape for one corrupted block, or an empty array when that form has no layout yet.
-## [b]The `#` forms are deliberately absent[/b]: the design shows them only as images, and their
-## cell layouts have to be written down before they can be built.
+## The shape for one corrupted block, or an empty array when that form does not exist — the design
+## lists no `#` for I or O.
 static func get_shape(block_type: int, form: Form) -> Array:
 	return SHAPES.get(block_type, {}).get(form, [])
 
