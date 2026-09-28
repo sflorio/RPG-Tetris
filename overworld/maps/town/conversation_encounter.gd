@@ -30,8 +30,26 @@ func _execute() -> void:
 	# example, the player lost a difficult but non-essential battle.
 	if did_player_win:
 		Dialogic.start_timeline(victory_timeline)
-	
+		await Dialogic.timeline_ended
+		# A defeated enemy leaves the field. Without this the encounter stays put and can be
+		# fought again forever, unlike the roaming encounters which remove themselves.
+		_remove_defeated_gamepiece()
+
 	else:
 		Dialogic.start_timeline(loss_timeline)
-	
-	await Dialogic.timeline_ended
+		await Dialogic.timeline_ended
+
+
+# This script sits on an Interaction inside the enemy's Gamepiece, so freeing `self` would leave
+# the sprite standing there with nothing to talk to. Walk up to the Gamepiece and remove that.
+# GamepieceRegistry releases the cell on its own when the node leaves the tree.
+func _remove_defeated_gamepiece() -> void:
+	var node: Node = self
+	while node != null:
+		if node is Gamepiece:
+			node.queue_free()
+			return
+		node = node.get_parent()
+
+	# No Gamepiece ancestor, so this interaction stands on its own.
+	queue_free()
