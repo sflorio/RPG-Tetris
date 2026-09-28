@@ -4,7 +4,9 @@ Fights are resolved by playing Tetris. Clearing a line makes the character that
 block is assigned to attack; the fight ends when every enemy is down, or when you
 top out.
 
-Implements the Boards, Unit Stats and Controls notes from the design vault. See
+Implements the Boards, Unit Stats, Status Effects and Controls notes from the
+design vault: two boards, character attacks, Rounds, the Union meter, a scripted
+enemy team, Xenoblocks, and ten of the fourteen status effects. See
 [DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) for what is still outstanding.
 
 ![Tetris battle](media/tetris_battle_screenshot.png)
@@ -118,7 +120,7 @@ no stated cause.
 A Perfect Strike turns the number red and adds `PERFECT STRIKE`; a fully dodged
 attack reads `MISS`. Heavier attacks overshoot further on the scale punch, shake
 on impact and hold longer before drifting off. All of it is in
-`src/combat/ui/ui_attack_popup.gd`.
+`src/combat/ui/ui_combat_popup.gd`.
 
 **Impact effects.** Borrowed in spirit from SNES-era JRPG combat — Chrono Trigger
 in particular, whose Dual and Triple Techs are the same idea as Rally Strikes and
@@ -305,8 +307,20 @@ Select the `Combat` node in `src/main.tscn` and untick **Use Tetris Combat**.
 
 ## Not done yet
 
-The five per-block effects (Golden, Charged, Burning, Frozen, Thorned) need the
-board to track a state per cell rather than just a colour. Xenoblocks — and so
-Infection — need their shapes written down as coordinates first; the vault only
-has them as images. Enemies still use a Basic Attack on a timer. See
-[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §4.
+**The five per-block effects** — Golden, Charged, Burning, Frozen, Thorned. All
+five need the same thing: the board storing a *state per cell* alongside its
+colour. `grid[x][y]` is only a colour index today, so there is nowhere to record
+"this block is frozen". One change to `Grid` unlocks all of them.
+
+**Enemy variety.** Every enemy uses a Basic Attack on a speed-derived timer. The
+design gives them attack tables, so specific enemies should inflict specific
+effects rather than all of them rolling against one shared list.
+
+**Numbers that are first-pass, not designed:** the damage formula in
+`attack_resolver.gd`, enemy cast times in `tetris_battle_config.gd`, and the 18%
+enemy status-infliction chance. Each is marked in the code.
+
+**No audio at all.**
+
+See [DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §4 for the order, and §5 for what
+is still waiting on a decision rather than on code.

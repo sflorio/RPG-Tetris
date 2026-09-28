@@ -1,3 +1,8 @@
+> **This is OpenRPG's changelog, kept from upstream.** It documents GDQuest's
+> turn-based combat, which this project replaced with Tetris battles — see
+> [TETRIS_INTEGRATION.md](TETRIS_INTEGRATION.md). For this project's history,
+> use the git log.
+
 # Changelog
 
 ## v0.3.4 Combat Rework 🛡️

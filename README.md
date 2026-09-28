@@ -1,41 +1,113 @@
 # RPG-Tetris
 
-An RPG where every fight is resolved by playing Tetris.
+An RPG where every fight is played out on a Tetris board.
 
-Explore a Pokémon-style overworld; when you run into an enemy, a Tetris board
-opens instead of a turn-based battle screen. Clearing lines damages the enemies,
-combos multiply that damage, and the fight ends when every enemy is defeated —
-or when you top out.
+You are a natural-born psion working at a small-town inn, in a kingdom where the
+School of Psionics is forbidden. An alien force invades to siphon the mana the
+planet gives off, and your ability — the thing you were meant to hide — turns out
+to be the only effective weapon against it.
+
+Explore the world on foot; when a fight starts, two boards open. Your active team
+holds the left one, the enemy team the right. Clearing a line makes one of your
+characters attack, and the fight ends when every enemy is down — or when you top
+out.
 
 ![Tetris battle](media/tetris_battle_screenshot.png)
 
 ## Running it
 
 **Requires Godot 4.7** (tested on 4.7.2). Get it from
-[godotengine.org/download](https://godotengine.org/download) — the standard build,
-not .NET/Mono; there is no C# in this project.
+[godotengine.org/download](https://godotengine.org/download) — the **standard**
+build, not .NET/Mono; there is no C# in this project.
 
 Import `project.godot` from the Godot project manager and press **F5**. The first
 import takes a minute while assets are converted.
-
-From a terminal, with `godot` being wherever you unpacked it:
 
 ```bash
 godot --path .
 ```
 
-Walk around town with the arrow keys or WASD, press Space to talk. Two
-encounters start a fight: the ghost blocking the south exit, and the NPC you can
-talk to.
+## Controls
 
-## Combat in one line
+Two keyboard schemes, because the design maps the same keys to different jobs.
+Keyboard A is the default; switch with
+`TetrisControls.apply(TetrisControls.Scheme.KEYBOARD_B)`.
 
-One cleared line = one damage. Multi-line clears, combos, repeated-piece streaks
-(three clears with the square doubles the damage), back-to-back Tetrises and
-perfect clears all multiply it.
+| | Keyboard A | Keyboard B | Controller |
+|---|---|---|---|
+| **Field** — move | WASD / arrows | WASD / arrows | D-Pad |
+| **Field** — talk, confirm | Space | Space | B |
+| **Combat** — move piece | `A` `D` | `←` `→` | D-Pad |
+| **Combat** — soft / hard drop | `S` / `W` | `↓` / `↑` | D-Pad |
+| **Combat** — rotate | `←` `→` | `A` `D` | A (right only) |
+| **Combat** — hold | Space | Space | X |
+| **Combat** — forfeit | Esc | Esc | B |
 
-**See [TETRIS_INTEGRATION.md](TETRIS_INTEGRATION.md)** for the full damage model,
-how enemies get their health, and how to add new combo rules.
+Rotate-left has no controller binding: the design assigns `A` to both rotate
+directions, which cannot work. Needs a decision.
+
+## How combat works
+
+The **block** you clear with decides *who* attacks; the **number of lines**
+decides *how*:
+
+| Lines | Result |
+|---|---|
+| 1 | That character's Basic Attack |
+| 2 | Special Attack |
+| 3 | Special Attack, +50% |
+| 4 | Every active ally's Rally Strike |
+
+Four-line clears are only reachable with the Line block, which is why it belongs
+to no character — it is the Rally Strike trigger. Every cleared line also fills
+the **Union meter**; at ten it fires a Union Assault automatically.
+
+Enemies charge over Rounds (one completed drop = one Round) and strike when their
+cast completes. They can inflict status effects that change how your board plays —
+fogging a third of it, locking rotation, hiding the preview, or corrupting your
+block queue with Xenoblocks.
+
+**See [TETRIS_INTEGRATION.md](TETRIS_INTEGRATION.md)** for the full model: damage,
+status effects, Xenoblocks, and the files to edit for each.
+
+## What is built
+
+| Area | State |
+|---|---|
+| Overworld, maps, dialogue, encounters, saving | from OpenRPG, working |
+| Two boards, 10×40, Rounds | done |
+| Character attacks, Rally Strikes, Union meter | done |
+| Unit and party stats, Psionic Power gating | done |
+| Scripted enemy team with cast timers | done |
+| Status effects | 10 of 14 |
+| Xenoblocks and Infection | done |
+| Golden / Charged / Burning / Frozen / Thorned | **not started** — need per-cell board state |
+| Techniques, Soul Gems, Trinkets, Constellations, Field Actions | **not started** |
+| Audio | **none** |
+
+Characters and enemies are still GDQuest's placeholders (Bear, Squirrel, Bugcat,
+Wolf) rather than the design's class list. The damage formula and enemy cast times
+are first-pass numbers, not designed ones — both are flagged in the code.
+
+## Design source
+
+The game is specified in an Obsidian vault at
+[publish.obsidian.md/projectfour](https://publish.obsidian.md/projectfour).
+[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) tracks the implementation against it,
+including what is still outstanding and the inconsistencies found in the vault
+itself.
+
+## Repository map
+
+```
+scr/          the Tetris board (from PokeTetris), block and Xenoblock shapes
+scn/          the board scene
+src/field/    overworld: grid, movement, triggers, cutscenes   (OpenRPG)
+src/combat/   the battle: units, attacks, status effects, UI
+overworld/    maps, dialogue, characters, encounter arenas
+combat/       battler stats and art
+addons/       Dialogic
+```
 
 ## Local patch to Dialogic
 
@@ -45,9 +117,9 @@ explicitly:
 
 | File | Function |
 |---|---|
-| `addons/dialogic/Modules/Variable/subsystem_variables.gd:179` | `_get` -> `return null` |
-| `addons/dialogic/Modules/Variable/subsystem_variables.gd:~242` | `VariableFolder._get` -> `return null` |
-| `addons/dialogic/Modules/Text/node_name_label.gd:18` | `_set` -> `return false` |
+| `addons/dialogic/Modules/Variable/subsystem_variables.gd:179` | `_get` → `return null` |
+| `addons/dialogic/Modules/Variable/subsystem_variables.gd:~242` | `VariableFolder._get` → `return null` |
+| `addons/dialogic/Modules/Text/node_name_label.gd:18` | `_set` → `return false` |
 
 **Updating Dialogic will overwrite these.** Re-apply them, or move to a Dialogic
 release that supports Godot 4.7.
@@ -55,10 +127,12 @@ release that supports Godot 4.7.
 ## Built on
 
 - [godot-open-rpg](https://github.com/gdquest-demos/godot-open-rpg) by GDQuest —
-  the overworld, grid movement, dialogue and encounter system (MIT).
-  Still available as the `upstream` remote.
-- [PokeTetris](https://github.com/jpcerrone/PokeTetris) by jpcerrone — the Tetris
-  board, SRS rotation and wall kicks (MIT).
+  the overworld, grid movement, dialogue and encounter system (MIT). Kept as the
+  `upstream` remote.
+- [PokeTetris](https://github.com/jpcerrone/PokeTetris) by jpcerrone — the board,
+  [SRS](https://harddrop.com/wiki/SRS) rotation and wall kicks (MIT).
 - [Dialogic](https://github.com/dialogic-godot/dialogic) for dialogue.
 
-Original licenses are kept in `LICENSE` and `CREDITS.md`.
+All in-game block art is generated in code (`scr/BlockTextures.gd`); no
+third-party sprites are used for it. Asset credits are in `CREDITS.md`, licences
+in `LICENSE`. `CHANGELOG.md` is OpenRPG's, kept from upstream.

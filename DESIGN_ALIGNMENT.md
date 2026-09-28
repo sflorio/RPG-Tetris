@@ -4,11 +4,12 @@ Read against the design vault at `publish.obsidian.md/projectfour` (27 notes),
 this records where the current prototype matches the design, where it actively
 conflicts, and the order I'd change things in.
 
-**Summary:** the overworld foundation is fine. The combat prototype is built on
-assumptions the design contradicts — one board instead of two, damage from line
-counts instead of from characters, and a combo system that doesn't exist in the
-design. Most combat code written so far is a throwaway spike, and that's OK: it
-proved the RPG↔puzzle seam works.
+**Status:** the twelve conflicts recorded below are all resolved. Combat now runs
+on two boards with character attacks, Rounds, the Union meter, unit and party
+stats, a scripted enemy team, Xenoblocks, and ten of the fourteen status effects.
+
+What remains is listed in §4 and §5: the five per-block effects, the progression
+systems, and a handful of numbers that are first-pass rather than designed.
 
 ---
 
@@ -88,26 +89,29 @@ These are **unlocks**, not defaults:
 
 ---
 
-## 2. Where the prototype conflicts
+## 2. Where the prototype conflicted — all resolved
 
-| # | Prototype today | Design | Severity |
+Kept as a record of what the first combat spike got wrong, and of how much of it
+had to be thrown away once the design was read. Every row is now fixed.
+
+| # | The spike did | The design says | Fixed in |
 |---|---|---|---|
-| 1 | **One** board, 10×23 (3 hidden) | **Two** boards, 10×40 (20 hidden) | Fundamental |
-| 2 | Enemies are passive HP bars | Enemy team plays its own board | Fundamental |
-| 3 | Damage = lines × multipliers | Damage = character attacks keyed to block type | Fundamental |
-| 4 | Combos, same-piece streak ×3, back-to-back, perfect clear | None of these exist in the design; Union meter + Rally Strikes instead | High |
-| 5 | I block is an ordinary piece | I block is the **Rally Strike trigger**; only it can clear 4 | High |
-| 6 | Enemy HP bars always visible | Gated behind the `HP Sight` psionic power | Medium |
-| 7 | Fall speed derived from enemy `base_speed` | Party `GRAV` stat, modified by Stars | Medium |
-| 8 | Rotate `X`/`Z`, Hold `Shift` | Rotate `←/→` (or `A/D`), Hold `Space` | Low (fixed — see §4) |
-| 9 | No Round concept | Round = one completed drop; effects tick per round | High |
-| 10 | Enemy = OpenRPG `Battler` (bugcat, wolf) | Units with `TYPE/TYPE2`, `POW/DEF/BAR/PSC/PSP/DOD` | Medium |
-| 11 | No status effects | 14 effects, most of which alter the board | High |
-| 12 | 7 fixed block colours | 7 blocks × 3 Xenoblock variants | Medium |
+| 1 | **One** board, 10×23 (3 hidden) | **Two** boards, 10×40 (20 hidden) | Phase 1, 3 |
+| 2 | Enemies are passive HP bars | Enemy team holds its own board | Phase 3 |
+| 3 | Damage = lines × multipliers | Character attacks keyed to block type | Phase 2 |
+| 4 | Combos, same-piece streak, back-to-back, perfect clear | None of these exist; Union meter and Rally Strikes instead | Phase 2, deleted |
+| 5 | I block is an ordinary piece | I block is the **Rally Strike trigger** | Phase 2 |
+| 6 | Enemy HP bars always visible | Gated behind the `HP Sight` psionic power | Phase 2 |
+| 7 | Fall speed from enemy `base_speed` | Party `GRAV` stat, modified by Stars | Phase 2 |
+| 8 | Rotate `X`/`Z`, Hold `Shift` | Rotate `←/→` or `A/D`, Hold `Space` | Phase 0 |
+| 9 | No Round concept | Round = one completed drop; effects tick on it | Phase 1 |
+| 10 | Enemy = OpenRPG `Battler` | Units with `TYPE/TYPE2`, `POW/DEF/BAR/PSC/PSP/DOD` | Phase 2 |
+| 11 | No status effects | 14 effects, most of which alter the board | Phase 4 (10 of 14) |
+| 12 | 7 fixed block colours | 7 blocks plus 19 Xenoblock forms | Phase 4 |
 
-## 3. What survives
+## 3. What survived the rewrite
 
-Worth keeping rather than rewriting:
+The parts that turned out to be right, and were kept rather than rebuilt:
 
 - **The combat seam.** `FieldEvents.combat_triggered(arena)` →
   `CombatEvents.combat_finished(won)` is untouched by any of this. Two boards and

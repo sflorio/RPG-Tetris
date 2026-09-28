@@ -1,4 +1,9 @@
-# Credits for external assets. 
+# Credits for external assets.
+
+> Inherited from OpenRPG, plus this project's own additions. The Tetris block art
+> is **not** listed here because it is generated in code (`scr/BlockTextures.gd`)
+> rather than being an asset. Code dependencies are credited in `README.md`.
+
 
 Apple Cider
 Author: Zane Little Music
