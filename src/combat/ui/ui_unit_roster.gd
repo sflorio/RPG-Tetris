@@ -10,7 +10,8 @@ class_name UIUnitRoster extends VBoxContainer
 const ROW_SEPARATION: = 16
 const BAR_HEIGHT: = 22
 const CAST_BAR_HEIGHT: = 8
-const ICON_SIZE: = 64
+## 3x the 24px source art, so the pixels stay square.
+const ICON_SIZE: = 72
 
 ## How long a health bar takes to drain to its new value.
 const DRAIN_TIME: = 0.35

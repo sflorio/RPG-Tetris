@@ -85,8 +85,11 @@ status effects, Xenoblocks, and the files to edit for each.
 | Techniques, Soul Gems, Trinkets, Constellations, Field Actions | **not started** |
 | Audio | **none** |
 
-Characters and enemies are still GDQuest's placeholders (Bear, Squirrel, Bugcat,
-Wolf) rather than the design's class list. The damage formula and enemy cast times
+Characters and enemies use Oryx sprites mapped onto the design's names — Soldier
+and Archer against Xeno Drone and Xeno Stalker — but they are still GDQuest's
+placeholder battlers underneath, with the stats and arenas to match.
+`src/combat/unit_appearance.gd` does that mapping and goes away once real units
+exist. The damage formula and enemy cast times
 are first-pass numbers, not designed ones — both are flagged in the code.
 
 ## Design source
@@ -133,6 +136,8 @@ release that supports Godot 4.7.
   [SRS](https://harddrop.com/wiki/SRS) rotation and wall kicks (MIT).
 - [Dialogic](https://github.com/dialogic-godot/dialogic) for dialogue.
 
-All in-game block art is generated in code (`scr/BlockTextures.gd`); no
-third-party sprites are used for it. Asset credits are in `CREDITS.md`, licences
+Unit sprites are 16-bit Fantasy by **Oryx Design Lab**
+([oryxdesignlab.com](https://www.oryxdesignlab.com)), used under their licence,
+which permits commercial use and requires that credit. The block art itself is
+generated in code (`scr/BlockTextures.gd`) rather than drawn. Asset credits are in `CREDITS.md`, licences
 in `LICENSE`. `CHANGELOG.md` is OpenRPG's, kept from upstream.

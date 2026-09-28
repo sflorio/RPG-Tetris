@@ -145,26 +145,38 @@ func _add_fallback_units() -> void:
 		enemies.append(CombatUnit.new(dummy_stats, false))
 
 
-# Battler art and stats follow the same convention, so
-# "res://combat/battlers/bugcat/bugcat_stats.tres" implies ".../bugcat.png".
+# Portraits come from [UnitAppearance], where the placeholder battlers are mapped onto the design's
+# classes and invaders. Anything unmapped falls back to the battler's own art, which follows the
+# same convention as its stats: "res://combat/battlers/bugcat/bugcat_stats.tres" implies
+# ".../bugcat.png".
 static func _load_unit_icon(battler: Battler) -> Texture2D:
 	var stats_path: = battler.stats.resource_path
 	if stats_path.is_empty():
 		return null
 
 	var slug: = stats_path.get_file().get_basename().trim_suffix("_stats")
+
+	var mapped: = UnitAppearance.get_sprite(slug)
+	if mapped != null:
+		return mapped
+
 	var icon_path: = "%s/%s.png" % [stats_path.get_base_dir(), slug]
 	if not ResourceLoader.exists(icon_path):
 		return null
 	return load(icon_path) as Texture2D
 
 
-# Battler nodes are named generically ("Battler2"), so name units after their stats resource.
+# Battler nodes are named generically ("Battler2"), so units are named after their stats resource,
+# then remapped by [UnitAppearance] onto the design's classes and invaders.
 static func _get_unit_name(battler: Battler) -> String:
 	var file_name: = battler.stats.resource_path.get_file().get_basename()
 	if file_name.is_empty():
 		return battler.name
-	return file_name.trim_suffix("_stats").capitalize()
+
+	var slug: = file_name.trim_suffix("_stats")
+	if UnitAppearance.has_mapping(slug):
+		return UnitAppearance.get_display_name(slug)
+	return slug.capitalize()
 
 
 static func _describe(enemy_counts: Dictionary) -> String:

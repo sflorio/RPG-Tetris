@@ -1,5 +1,13 @@
 # Credits for external assets.
 
+## Unit sprites
+
+16-bit Fantasy sprites by **Oryx Design Lab** — www.oryxdesignlab.com
+Used under their licence, which permits commercial use in games and **requires
+this credit**. The licence is not transferable and the artwork may not be
+redistributed, so only the individual sprites this game actually uses are kept in
+`assets/units/`; the purchased pack itself is not committed.
+
 > Inherited from OpenRPG, plus this project's own additions. The Tetris block art
 > is **not** listed here because it is generated in code (`scr/BlockTextures.gd`)
 > rather than being an asset. Code dependencies are credited in `README.md`.
