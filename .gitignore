@@ -27,6 +27,9 @@ mono_crash.*.json
 
 # The purchased Oryx art pack. Source art, not game-ready assets: ~2800 files and
 # ~19MB of PSDs. The licence does not permit redistributing the artwork, so the
-# pack stays out of the repository and only the sprites actually used are kept,
-# under assets/units/.
+# pack stays out of the repository and only what the game actually uses is kept,
+# under assets/units/, assets/fx/ and assets/tiles/.
 /resoursces/
+
+# Python bytecode from the map tools.
+tools/__pycache__/

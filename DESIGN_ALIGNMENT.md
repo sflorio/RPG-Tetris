@@ -237,46 +237,86 @@ Worth fixing in the docs themselves:
 
 ---
 
-## 6. Art direction: why the overworld is still Kenney
+## 7. Art direction: the overworld on Oryx world tiles
 
-Recorded so it is not re-opened from scratch. The Oryx 16-bit Fantasy pack was
-evaluated for retiling the overworld and **rejected for that purpose**, while being
-adopted for units and combat effects.
+Town, House and Forest are built from the Oryx 16-bit Fantasy world tiles. An
+earlier pass in this document claimed the pack held no outdoor terrain and
+recommended against the retile; **that was wrong**, and it was wrong for a dull
+reason worth recording: the sheet is 1366px wide and every crop taken to review it
+was under 700px, so only the dungeon half was ever looked at. The right half holds
+nine complete outdoor terrain sets and seven tree species.
 
-### The remap itself was not the problem
+### What the pack actually provides
 
-Tile data is stored in *cell* coordinates, so swapping tilesets preserves every map
-layout exactly, and the maps use only **99 distinct tiles** across ~5,400 cells.
-Mechanically it was a small job.
+`oryx_world2.png` from the pack's TMX Source folder is a clean 24px grid with no
+margin or separation, using pure black as transparency — and no artwork uses pure
+black (the darkest colour is `(38,38,38)`), so keying it out is lossless. That
+becomes `assets/tiles/oryx_world.png`.
 
-### Two things stopped it
+- **Nine terrain sets** (grass, dry grass, dirt, dark moss, swamp, snow, pale sand,
+  sand, forest floor). Each is two rows: interior variants, then a 16-tile
+  "match sides" autotile. The pack ships 15 of the 16 — the piece that connects
+  downwards only is missing — so `tools/make_world_atlas.py` bakes it in as a
+  vertical mirror of the upwards-only piece, in the spare column beside each set.
+- **Seven tree species**, each a seamless 3x3 canopy block plus two single trees.
+- Wall runs in ten colourways, fences, doors, and a full set of interior props.
 
-**1. The pack has the wrong vocabulary for these maps.** All 41 rows of the world
-sheet and the separate tiles sheet were rendered and reviewed. They hold dungeon
-and interior surfaces — stone and brick walls, dungeon floors, lava, moss, snow,
-rock, carpets, wood flooring, pipes, hedges, fences, cliff edges. They do **not**
-hold outdoor grass with dirt-path autotile transitions, leafy trees, or tiled
-village roofs, which is what the maps are built from.
+The one real gap is **village buildings**: there are no tiled roofs or house
+facades. The town's houses are composed instead — plain brick for the roof body,
+the brick wall run along the eave so it casts a front shadow, grey stone with
+barred windows for the ground floor, and a wooden door.
 
-That matters because of where the cells actually are:
+### How the maps are built
 
-| Map | Cells | Character |
-|---|---|---|
-| Town | 2,820 | outdoor village |
-| Forest | 2,468 | outdoor woodland |
-| House | 146 | stone interior |
+The rebuild is scripted, not hand-painted, and lives in `tools/`:
 
-The pack is strong for 146 cells and weak for 5,288. A forced mapping would put
-dungeon floor where the grass is and hedges where the trees are.
+| Script | Job |
+|---|---|
+| `make_world_atlas.py` | keys black out of the Oryx sheet and patches the missing terrain piece |
+| `oryx_atlas.py` | names the tiles: terrains, trees, walls, floors, doors, props |
+| `build_tileset.py` | writes `overworld/maps/tilesets/oryx_world.tres`, deriving terrain peering bits from the artwork |
+| `build_maps.py` | rebuilds every layer from `legacy_maps.json` |
+| `apply_maps.py` | writes the result into `src/main.tscn` and migrates 16px to 24px |
+| `check_maps.py` | proves the gameboard did not change |
+| `render_oryx.py` | renders the maps to PNG, so the look can be judged outside Godot |
 
-**2. The grid sizes differ.** The gameboard runs on 16px cells
-(`overworld/maps/gbprops.tres`); Oryx art is 24px. Doing it properly means
-migrating `cell_size` to 24 and scaling every gamepiece position, door and
-area-transition coordinate by 1.5.
+`tools/legacy_maps.json` is the GDQuest maps exactly as they were, on the Kenney
+tiles. The rebuild reads its *shape* from there — which cells exist, which block
+movement, what each one was — rather than from whatever is currently in the scene,
+which is why `apply_maps.py` can be re-run after any change to the painting rules.
+`overworld/maps/tilesets/kenney_terrain.tres` and its two PNGs stay in the
+repository for the same reason: `check_maps.py` reads the old blocking flags out of
+them to verify the rebuild.
+
+**The gameboard is unchanged.** Gamepieces, doors, area transitions and cutscene
+triggers are all authored against cell coordinates, so `check_maps.py` asserts that
+the set of walkable cells is identical before and after — 346 walkable cells out of
+2,899 tiled ones, with nothing gained or lost.
+
+### The 16px to 24px migration
+
+Cell size moved from 16 to 24 in `overworld/maps/gbprops.tres`. Cell coordinates
+did not change; pixel measurements did, all by 1.5:
+
+- every authored `position` and `arrival_coordinates` under `Field/Map`
+- `move_speed` on the gamepieces that have one, and the interaction radii
+- the collision shapes in `Interaction.tscn`, `Trigger.tscn`,
+  `interaction_popup.tscn` and `door.tscn`
+- `Main`'s scale, from 5 to 3, so roughly the same number of cells stays on screen
+  while the scale factor stays an integer
+
+Two decorative layers were added, `Town/GroundCover` and `Forest/Undergrowth`.
+Oryx's transitions are cut out of the tile, so a terrain has to sit on top of a
+base fill rather than beside it. Neither layer carries `gameboard_layer.gd`, so
+neither can change what is walkable.
 
 ### What is still open
 
-Re-theming the overworld as **occupied ruins rather than a village** would suit the
-design's alien invasion better than a cosy demo town, and Oryx's rubble and
-dungeon vocabulary would fit that. But that is designing new maps, not remapping
-existing ones, and it is a separate piece of work.
+**The overworld characters are still Kenney 16px art**, which now reads visibly
+small against 24px tiles. The pack has matching `classes_26x28` and
+`creatures_24x24` folders, so this is a straightforward follow-up, but it is a
+separate job from retiling.
+
+Re-theming the overworld as **occupied ruins rather than a village** would still
+suit the design's alien invasion better than a cosy demo town. That is designing
+new maps, not retiling existing ones.

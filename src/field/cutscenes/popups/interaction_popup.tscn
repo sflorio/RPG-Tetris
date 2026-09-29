@@ -4,16 +4,16 @@
 [ext_resource type="Script" uid="uid://5qqjcduwxpw6" path="res://src/field/cutscenes/popups/interaction_popup.gd" id="2_2fot7"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_cbdy6"]
-radius = 32.0
+radius = 48.0
 
 [node name="InteractionPopup" instance=ExtResource("1_582ge")]
 script = ExtResource("2_2fot7")
 emote = 1
-radius = 32
+radius = 48
 is_active = true
 
 [node name="Sprite2D" parent="." index="0"]
-position = Vector2(0, -12)
+position = Vector2(0, -18)
 
 [node name="Area2D" type="Area2D" parent="." index="2"]
 show_behind_parent = true

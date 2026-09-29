@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_0hcip")
 extents = Rect2i(0, 0, 70, 35)
-cell_size = Vector2i(16, 16)
+cell_size = Vector2i(24, 24)
 metadata/_custom_type_script = "uid://cyl76x7u73s67"

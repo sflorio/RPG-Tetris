@@ -1,12 +1,14 @@
 # Credits for external assets.
 
-## Unit sprites
+## Sprites and world tiles
 
-16-bit Fantasy sprites by **Oryx Design Lab** — www.oryxdesignlab.com
+16-bit Fantasy by **Oryx Design Lab** — www.oryxdesignlab.com
 Used under their licence, which permits commercial use in games and **requires
 this credit**. The licence is not transferable and the artwork may not be
-redistributed, so only the individual sprites this game actually uses are kept in
-`assets/units/`; the purchased pack itself is not committed.
+redistributed, so only what this game actually uses is kept in the repository —
+unit portraits in `assets/units/`, combat effects in `assets/fx/`, and the world
+tiles the overworld is built from in `assets/tiles/`. The purchased pack itself
+is not committed.
 
 > Inherited from OpenRPG, plus this project's own additions. The Tetris block art
 > is **not** listed here because it is generated in code (`scr/BlockTextures.gd`)
@@ -57,6 +59,9 @@ Tiny Series (Tiny Town & Tiny Dungeon)
 Author: Kenney  
 URL: https://kenney.nl/assets/tiny-town & https://kenney.nl/assets/tiny-dungeon (accessed 2023-02-22)  
 License: [CC0](https://creativecommons.org/publicdomain/zero/1.0/)  
+Still used for the overworld characters. The two tileset sheets no longer draw any
+map — they stay in `overworld/maps/tilesets/` because `tools/check_maps.py` reads
+the old blocking flags out of them to verify the Oryx rebuild.  
   
 Tiny Town - Animated Characters
 Author: food_please; derived from Tiny Town (Kenney) & DawnLike (DragonDePlatino)  

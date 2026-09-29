@@ -1,7 +1,7 @@
 [gd_scene load_steps=13 format=3 uid="uid://p0e4b0txynkd"]
 
 [ext_resource type="PackedScene" uid="uid://bd624fi8r2avm" path="res://src/field/cutscenes/templates/area_transitions/area_transition.tscn" id="1_0tk0k"]
-[ext_resource type="Texture2D" uid="uid://d2qfi5sncf72b" path="res://overworld/maps/tilesets/town_tilemap.png" id="2_4mdkx"]
+[ext_resource type="Texture2D" path="res://assets/tiles/oryx_world.png" id="2_4mdkx"]
 [ext_resource type="Script" uid="uid://st17bkmvrohu" path="res://src/field/cutscenes/templates/doors/door.gd" id="2_13rnv"]
 [ext_resource type="AudioStream" uid="uid://c6o0qv4eig4q" path="res://assets/sfx/doorClose_1.ogg" id="4_d3ljg"]
 [ext_resource type="AudioStream" uid="uid://bww5xt1qrtltu" path="res://assets/sfx/impactWood_light_003.ogg" id="5_b854r"]
@@ -168,17 +168,17 @@ script = ExtResource("2_13rnv")
 is_locked = false
 
 [node name="Area2D" parent="." index="0"]
-position = Vector2(0, -8)
+position = Vector2(0, -12)
 
 [node name="OpenDoor" type="Sprite2D" parent="Area2D" index="1"]
 texture = ExtResource("2_4mdkx")
 region_enabled = true
-region_rect = Rect2(34, 102, 16, 16)
+region_rect = Rect2(696, 192, 24, 24)
 
 [node name="ClosedDoor" type="Sprite2D" parent="Area2D" index="2"]
 texture = ExtResource("2_4mdkx")
 region_enabled = true
-region_rect = Rect2(17, 119, 16, 16)
+region_rect = Rect2(672, 192, 24, 24)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." index="3"]
 libraries = {

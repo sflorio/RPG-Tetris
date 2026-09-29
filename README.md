@@ -75,6 +75,7 @@ status effects, Xenoblocks, and the files to edit for each.
 | Area | State |
 |---|---|
 | Overworld, maps, dialogue, encounters, saving | from OpenRPG, working |
+| Town, House and Forest retiled on Oryx world tiles | done |
 | Two boards, 10×40, Rounds | done |
 | Character attacks, Rally Strikes, Union meter | done |
 | Unit and party stats, Psionic Power gating | done |
@@ -138,11 +139,15 @@ release that supports Godot 4.7.
 
 ### Art direction
 
-The overworld stays on GDQuest's Kenney tiles; Oryx is used for units and combat
-effects. That split is deliberate — see
-[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §6.
+Everything visible is Oryx 16-bit Fantasy: the overworld tiles, the unit
+portraits and the combat effects. Town, House and Forest were rebuilt on the
+pack's 24px world tiles, which moved the gameboard from 16px cells to 24px — the
+rebuild is scripted in `tools/` and described in
+[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §7. The overworld *characters* are
+still GDQuest's Kenney 16px sprites and now read small against the tiles; that is
+the next art job.
 
-Unit sprites are 16-bit Fantasy by **Oryx Design Lab**
+Sprites are 16-bit Fantasy by **Oryx Design Lab**
 ([oryxdesignlab.com](https://www.oryxdesignlab.com)), used under their licence,
 which permits commercial use and requires that credit. The block art itself is
 generated in code (`scr/BlockTextures.gd`) rather than drawn. Asset credits are in `CREDITS.md`, licences

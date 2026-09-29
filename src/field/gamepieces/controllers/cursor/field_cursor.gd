@@ -49,7 +49,7 @@ func set_focus(value: Vector2i) -> void:
 	clear()
 	
 	if focus != Gameboard.INVALID_CELL:
-		set_cell(focus, 0, Vector2i(1, 5), 0)
+		set_cell(focus, 0, Vector2i(1, 0), 0)
 		#set_cell(0, focus, 0, Vector2(1, 5))
 	
 	focus_changed.emit(old_focus, focus)
