@@ -136,6 +136,12 @@ release that supports Godot 4.7.
   [SRS](https://harddrop.com/wiki/SRS) rotation and wall kicks (MIT).
 - [Dialogic](https://github.com/dialogic-godot/dialogic) for dialogue.
 
+### Art direction
+
+The overworld stays on GDQuest's Kenney tiles; Oryx is used for units and combat
+effects. That split is deliberate — see
+[DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §6.
+
 Unit sprites are 16-bit Fantasy by **Oryx Design Lab**
 ([oryxdesignlab.com](https://www.oryxdesignlab.com)), used under their licence,
 which permits commercial use and requires that credit. The block art itself is

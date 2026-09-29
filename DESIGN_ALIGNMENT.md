@@ -234,3 +234,49 @@ Worth fixing in the docs themselves:
   siblings.
 - `Type Chart`, `Union Assault`, `Game Introduction`, `Examine Icon` are stubs;
   `Story` is marked TBD.
+
+---
+
+## 6. Art direction: why the overworld is still Kenney
+
+Recorded so it is not re-opened from scratch. The Oryx 16-bit Fantasy pack was
+evaluated for retiling the overworld and **rejected for that purpose**, while being
+adopted for units and combat effects.
+
+### The remap itself was not the problem
+
+Tile data is stored in *cell* coordinates, so swapping tilesets preserves every map
+layout exactly, and the maps use only **99 distinct tiles** across ~5,400 cells.
+Mechanically it was a small job.
+
+### Two things stopped it
+
+**1. The pack has the wrong vocabulary for these maps.** All 41 rows of the world
+sheet and the separate tiles sheet were rendered and reviewed. They hold dungeon
+and interior surfaces — stone and brick walls, dungeon floors, lava, moss, snow,
+rock, carpets, wood flooring, pipes, hedges, fences, cliff edges. They do **not**
+hold outdoor grass with dirt-path autotile transitions, leafy trees, or tiled
+village roofs, which is what the maps are built from.
+
+That matters because of where the cells actually are:
+
+| Map | Cells | Character |
+|---|---|---|
+| Town | 2,820 | outdoor village |
+| Forest | 2,468 | outdoor woodland |
+| House | 146 | stone interior |
+
+The pack is strong for 146 cells and weak for 5,288. A forced mapping would put
+dungeon floor where the grass is and hedges where the trees are.
+
+**2. The grid sizes differ.** The gameboard runs on 16px cells
+(`overworld/maps/gbprops.tres`); Oryx art is 24px. Doing it properly means
+migrating `cell_size` to 24 and scaling every gamepiece position, door and
+area-transition coordinate by 1.5.
+
+### What is still open
+
+Re-theming the overworld as **occupied ruins rather than a village** would suit the
+design's alien invasion better than a cosy demo town, and Oryx's rubble and
+dungeon vocabulary would fit that. But that is designing new maps, not remapping
+existing ones, and it is a separate piece of work.
