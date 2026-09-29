@@ -134,6 +134,14 @@ func _spawn_line_flash(row: int, intensity: float) -> void:
 	bar.z_index = 3
 	add_child(bar)
 
+	# A burst on the row as well as the bar, scaled to the size of the clear.
+	CombatFX.spawn(
+		self, CombatFX.LINE_CLEAR,
+		Vector2(gridOffsetX + gridWidth*spriteSize*0.5, row*spriteSize + gridOffsetY + spriteSize*0.5),
+		# Roughly two cells across. Sized off the clear it would overrun the playfield entirely.
+		spriteSize * 1.7, 4
+	)
+
 	var duration := 0.20 + intensity*0.22
 	var tween := create_tween().set_parallel()
 	tween.tween_property(bar, "modulate:a", 0.0, duration)

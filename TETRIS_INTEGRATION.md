@@ -137,6 +137,24 @@ The screen flash is deliberately weak (peak alpha ~0.13). It covers the rosters
 and tally as well as the boards, so a strong wash blanks the HUD instead of
 punctuating the hit.
 
+**Effect sprites.** Oryx FX sit on top of the code-drawn flashes, fired from
+`src/combat/ui/combat_fx.gd`:
+
+| Moment | Effect |
+|---|---|
+| A line clears | teal ring on each cleared row |
+| Basic Attack | yellow starburst |
+| Special | white cross slash |
+| Special +50% | fire burst |
+| Rally Strike | larger fire burst |
+| Union Assault | blue detonation |
+| A Xenoblock is queued | magenta plume |
+| Rally Strike grants Shield | blue guard ring |
+
+They are drawn *behind* the call-out (`z_index` 14 against the popup's 20) and kept
+well under the board width. At full size they buried the damage number and spilled
+past the playfield.
+
 **Board style.** `BoardSkin` restyles each board instance at runtime: the red
 pixel frame and the Kremlin are hidden, backgrounds go dark slate, the Hold/Next/
 Score frames are dropped, and the DOS pixel font is swapped for Roboto Bold. The

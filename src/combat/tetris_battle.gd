@@ -343,6 +343,9 @@ func _on_lines_cleared(count: int, block_type: int) -> void:
 			if shield != null and rallied.is_empty():
 				rallied.append(shield)
 		_ally_roster.refresh()
+		CombatFX.spawn(
+			self, CombatFX.GUARD, _player_board_rect.get_center(), 150.0, 14
+		)
 		_announce_status(rallied, config.get_active_allies()[0], _player_board_rect)
 	else:
 		# Otherwise only the character holding this block attacks. A block assigned to nobody still
@@ -442,6 +445,11 @@ func _apply_infection() -> void:
 		if shape.is_empty():
 			continue
 		_grid.force_next_shape(shape)
+		CombatFX.spawn(
+			self, CombatFX.XENO,
+			Vector2(_player_board_rect.get_center().x, _player_board_rect.position.y + 120.0),
+			110.0, 14
+		)
 		pushed += 1
 
 	if pushed > 0:
@@ -595,6 +603,7 @@ func _apply_results(
 	if not results.is_empty():
 		_show_attack_popup(results, total_damage, popup_rect)
 		_play_impact(results)
+		_spawn_attack_fx(results, popup_rect)
 
 
 static func _get_front_unit(units: Array[CombatUnit]) -> CombatUnit:
@@ -632,6 +641,26 @@ func _announce_status(
 	var popup: = UICombatPopup.new()
 	add_child(popup)
 	popup.play_status(applied, unit, rect)
+
+
+# A burst over the board that was struck, matched to the heaviest attack in the batch.
+func _spawn_attack_fx(results: Array[AttackResult], rect: Rect2) -> void:
+	var heaviest: = AttackResolver.Kind.BASIC
+	var landed: = false
+	for result in results:
+		if not result.was_dodged:
+			landed = true
+			if result.kind > heaviest:
+				heaviest = result.kind
+	if not landed:
+		return
+
+	var weight: = float(heaviest) / float(AttackResolver.Kind.UNION_ASSAULT)
+	# Kept well under the board width and behind the call-out, so it punctuates the hit rather
+	# than burying the damage number.
+	CombatFX.spawn_for_attack(
+		self, heaviest, rect.get_center(), 110.0 + weight*120.0, 14
+	)
 
 
 # Shakes the screen and, for a heavy attack, washes it with colour. Scaled by the weight of the
