@@ -15,7 +15,10 @@ ROOT = oa.ROOT
 SCENE = os.path.join(ROOT, "src", "main.tscn")
 SRC = 0  # the single Oryx atlas source
 
-T_GRASS, T_DIRT, T_PATH, T_FOREST = "grass", "dirt", "pale_sand", "forest_floor"
+# How the old map's ground reads in Oryx terms. The paths are brown earth rather than the pale
+# sand they first got: Oryx's own mockups run dirt tracks through grass, and pale sand at this
+# width read as a beach rather than a village lane.
+T_GRASS, T_PATCH, T_PATH, T_FOREST = "grass", "dry_grass", "dirt", "forest_floor"
 
 
 # The maps as GDQuest authored them, on the Kenney tiles. The rebuild reads its shape -- which
@@ -44,7 +47,7 @@ for _c in [(0, 0), (1, 0), (2, 0)]:
     GROUND_CLASS[_c] = T_GRASS
 for _c in [(0, 1), (1, 1), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (1, 3), (2, 3),
            (3, 3), (4, 3), (5, 3), (6, 3)]:
-    GROUND_CLASS[_c] = T_DIRT
+    GROUND_CLASS[_c] = T_PATCH
 GROUND_CLASS[(7, 3)] = T_PATH
 
 TREE_BLOB = {(x, y) for x in range(6, 12) for y in range(3)}
@@ -123,7 +126,9 @@ class Painter:
 
     # Woods are laid out in stands rather than one species everywhere: a single 3x3 canopy block
     # repeated over a whole map reads as wallpaper, with the trunk row banding every third row.
-    STANDS = ["green", "green", "green", "pine", "green", "autumn", "pine", "green"]
+    # Only the two greens, though -- the autumn set is bright orange, and a stand of it next to
+    # the village read as a stain rather than as trees.
+    STANDS = ["green", "green", "pine", "green", "green", "pine", "green", "pine"]
     STAND_SIZE = 7
 
     def _stand(self, cell):
@@ -134,10 +139,31 @@ class Painter:
         h = (sx * 73856093) ^ (sy * 19349663)
         return self.STANDS[(h >> 3) % len(self.STANDS)], (h >> 11) % 3, (h >> 17) % 3
 
-    def canopy(self, cell):
+    def canopy(self, cell, members):
+        """One tile of a 3x3 canopy block, chosen so the block's edge row lands on the edge of
+        the wood.
+
+        Tiling the block as-is is what makes a big wood read as wallpaper: the broadleaf block's
+        bottom row is drawn with trunks and roots, so repeating it stripes the forest every third
+        row. That row belongs on the south edge of the mass and nowhere else. The conifer block is
+        built the other way up -- its first row is the one where the tops are clear -- so that row
+        belongs on the north edge."""
         kind, px, py = self._stand(cell)
         cx, cy = oa.TREES[kind]["canopy"]
-        return (cx + (cell[0] + px) % 3, cy + (cell[1] + py) % 3)
+        x, y = cell
+        if oa.TREES[kind]["trunks_at_bottom"]:
+            # Broadleaf: the block is one 3x3 grove. Its outer columns carry a trunk at the side
+            # and its bottom row carries trunks and roots, so all of that belongs on the edge of
+            # the mass; the clean middle tile fills the interior as unbroken canopy.
+            col = (0 if (x - 1, y) not in members
+                   else 2 if (x + 1, y) not in members else 1)
+            row = 2 if (x, y + 1) not in members else (y + py) % 2
+        else:
+            # Conifers are drawn as whole trees however they are tiled, so keep the artist's
+            # 3-wide rhythm and only move the clear-tops row to the north edge.
+            col = (x + px) % 3
+            row = 0 if (x, y - 1) not in members else 1 + (y + py) % 2
+        return (cx + col, cy + row)
 
     def single_tree(self, cell):
         kind, _, _ = self._stand(cell)
@@ -147,7 +173,7 @@ class Painter:
         return self._pick(oa.FLOWERS, cell)
 
     def bush(self, cell):
-        return self._pick(oa.BUSHES + oa.SHRUBS, cell)
+        return self._pick(oa.BUSHES, cell)
 
     def prop(self, cell):
         return self._pick(oa.ROCKS + [oa.STUMP], cell)
@@ -175,11 +201,15 @@ def build(painter, old):
     out["Field/Map/Town/Ground"] = [cell + (SRC,) + painter.fill(T_GRASS, cell) + (0,)
                                     for cell in classes]
 
-    cover = []
-    for name in (T_DIRT, T_PATH):
+    town_trees = {(x, y) for x, y, s, ax, ay, _ in old["Field/Map/Town/Trees"]
+                  if classify_scenery_cell(s, ax, ay) == "tree"}
+    cover = undergrowth(painter, town_trees)
+    for name in (T_PATCH, T_PATH):
         members = {c for c, k in classes.items() if k == name}
         for cell in members:
             cover.append(cell + (SRC,) + painter.autotile(name, cell, members) + (0,))
+    plain = set(classes) - {(c[0], c[1]) for c in cover} - town_trees
+    cover += meadow(painter, plain)
     out["Field/Map/Town/GroundCover"] = cover
 
     out["Field/Map/Town/Buildings"] = buildings(painter, old["Field/Map/Town/Buildings"])
@@ -192,11 +222,10 @@ def build(painter, old):
     out["Field/Map/Forest/Terrain"] = [(x, y, SRC) + painter.fill(T_GRASS, (x, y)) + (0,)
                                        for x, y, s, ax, ay, _ in old["Field/Map/Forest/Terrain"]]
 
-    # Dark undergrowth wherever the wood is thick, so the clearings read as clearings.
-    wooded = {(x, y) for x, y, s, ax, ay, _ in old["Field/Map/Forest/Trees"]}
-    floor_cells = {c for c in wooded if neighbours(c, wooded) >= 3}
-    out["Field/Map/Forest/Undergrowth"] = [
-        c + (SRC,) + painter.autotile(T_FOREST, c, floor_cells) + (0,) for c in floor_cells]
+    wooded = {(x, y) for x, y, s, ax, ay, _ in old["Field/Map/Forest/Trees"]
+              if classify_scenery_cell(s, ax, ay) == "tree"}
+    clearing = {(x, y) for x, y, s, ax, ay, _ in old["Field/Map/Forest/Terrain"]} - wooded
+    out["Field/Map/Forest/Undergrowth"] = undergrowth(painter, wooded) + meadow(painter, clearing)
 
     out["Field/Map/Forest/Trees"] = scenery(painter, old["Field/Map/Forest/Trees"])
     out["Field/Map/Forest/Treetops"] = []
@@ -205,13 +234,40 @@ def build(painter, old):
     return out
 
 
+def undergrowth(painter, wooded):
+    """Dark forest floor under and just outside the thick of the wood.
+
+    Taking the wood's own cells alone would be invisible -- the canopy covers them. What makes the
+    wood read as having depth is the ring that falls one cell beyond it, so the trees stand in
+    their own shade rather than on bright lawn. Isolated trees are left out, or every one of them
+    would sit in a dark blotch."""
+    inner = {c for c in wooded if neighbours(c, wooded) >= 3}
+    shade = set(inner)
+    for x, y in inner:
+        shade.update(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+    return [c + (SRC,) + painter.autotile(T_FOREST, c, shade) + (0,) for c in sorted(shade)]
+
+
+def meadow(painter, cells):
+    """Sparse flowers over open grass. A field of one tile is flat however good the tile is, and
+    Oryx's own overworld mockups break theirs up exactly this way."""
+    out = []
+    for cell in sorted(cells):
+        h = ((cell[0] * 73856093) ^ (cell[1] * 19349663)) & 0xFFFF
+        if h % 13 == 0:
+            out.append(cell + (SRC,) + painter.scatter(cell) + (0,))
+    return out
+
+
 def scenery(painter, cells):
+    canopies = {(x, y) for x, y, s, ax, ay, _ in cells
+                if classify_scenery_cell(s, ax, ay) == "tree"}
     out = []
     for x, y, s, ax, ay, _ in cells:
         kind = classify_scenery_cell(s, ax, ay)
         cell = (x, y)
         if kind == "tree":
-            coord = painter.canopy(cell)
+            coord = painter.canopy(cell, canopies)
         elif kind == "tree_single":
             coord = painter.single_tree(cell)
         elif kind == "bush":
@@ -227,16 +283,15 @@ def scenery(painter, cells):
 
 
 def buildings(painter, cells):
-    roofs = {(x, y) for x, y, s, ax, ay, _ in cells if classify_building_cell(ax, ay) == "roof"}
     out = []
     for x, y, s, ax, ay, _ in cells:
         cell = (x, y)
         kind = classify_building_cell(ax, ay)
         if kind == "roof":
-            # The Oryx wall run carries a shadowed front face. Use it only along the eave, and
-            # plain brick above it, so a roof does not read as a row of separate blocks.
-            coord = (painter.wall("brick", cell) if (x, y + 1) not in roofs
-                     else painter._pick(oa.ROOF_FILL, cell))
+            # Plain brick, never the Oryx wall run. The run carries a shadowed front face that
+            # covers most of the tile, and a roof built from it reads as a black box on the grass.
+            # The one shadow line a house gets is the base of its wall, below.
+            coord = painter._pick(oa.ROOF_FILL, cell)
         elif kind == "door":
             coord = oa.DOORS["wood_closed"]
         elif kind == "window":
@@ -252,8 +307,9 @@ def house(painter, old):
                                       for x, y, s, ax, ay, _ in old["Field/Map/House/Ground"]]}
     walls = []
     for x, y, s, ax, ay, _ in old["Field/Map/House/Walls"]:
-        # One wall tile throughout: a room is small enough that variants read as noise.
-        coord = oa.FLOOR["flagstone"] if (ax, ay) == (9, 0) else (9, oa.WALLS["stone"]["row"])
+        # One wall tile throughout: a room is small enough that variants read as noise. The two
+        # gaps in the wall are the doorways out, so they get the dark floor rather than a lit one.
+        coord = oa.FLOOR["dark"] if (ax, ay) == (9, 0) else (9, oa.WALLS["stone"]["row"])
         walls.append((x, y, SRC) + coord + (0,))
     out["Field/Map/House/Walls"] = walls
 

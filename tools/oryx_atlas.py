@@ -33,23 +33,26 @@ TERRAINS = [
 ]
 TERRAIN_INDEX = {name: i for i, (name, _, _) in enumerate(TERRAINS)}
 
-# --- Trees ----------------------------------------------------------------------------------
-# canopy = the top-left of a seamless 3x3 block; singles = stand-alone trees.
+# Trees. `canopy` is the top-left of a seamless 3x3 block and `singles` are stand-alone trees.
+# `trunks_at_bottom` says which way up the block is drawn: the broadleaf blocks put the trunks and
+# roots on their last row, so that row belongs on the south edge of a wood, while the conifer
+# blocks put the clear tree tops on their first row, which belongs on the north edge.
 TREES = {
-    "green":  {"canopy": (43, 11), "singles": [(44, 15), (45, 15)]},
-    "autumn": {"canopy": (46, 11), "singles": [(47, 15), (48, 15)]},
-    "dead":   {"canopy": (49, 11), "singles": [(50, 15), (51, 15)]},
-    "pine":   {"canopy": (52, 11), "singles": [(52, 15), (53, 15)]},
-    "snow":   {"canopy": (55, 11), "singles": [(55, 15), (56, 15)]},
-    "stone":  {"canopy": (58, 11), "singles": [(58, 15), (59, 15)]},
-    "brown":  {"canopy": (61, 11), "singles": [(61, 15), (62, 15)]},
+    "green":  {"canopy": (43, 11), "singles": [(44, 15), (45, 15)], "trunks_at_bottom": True},
+    "autumn": {"canopy": (46, 11), "singles": [(47, 15), (48, 15)], "trunks_at_bottom": True},
+    "dead":   {"canopy": (49, 11), "singles": [(50, 15), (51, 15)], "trunks_at_bottom": True},
+    "pine":   {"canopy": (52, 11), "singles": [(52, 15), (53, 15)], "trunks_at_bottom": False},
+    "snow":   {"canopy": (55, 11), "singles": [(55, 15), (56, 15)], "trunks_at_bottom": False},
+    "stone":  {"canopy": (58, 11), "singles": [(58, 15), (59, 15)], "trunks_at_bottom": False},
+    "brown":  {"canopy": (61, 11), "singles": [(61, 15), (62, 15)], "trunks_at_bottom": False},
 }
 
 # --- Scatter --------------------------------------------------------------------------------
 FLOWERS = [(43, 7), (44, 7), (45, 7)]
 BUSHES = [(47, 7), (48, 7), (49, 7)]
 SHRUBS = [(43, 9), (44, 9), (45, 9)]
-ROCKS = [(44, 8), (45, 8), (46, 8), (47, 8)]
+# Grey only: the brown one reads as a traffic cone once it is sitting on grass.
+ROCKS = [(45, 8), (46, 8), (47, 8)]
 STUMP = (47, 9)
 CAVE = (43, 8)
 
@@ -74,7 +77,7 @@ WALLS = {
 ROOF_FILL = [(0, 3), (1, 3), (2, 3)]
 
 FLOOR = {
-    "plank": (33, 17), "flagstone": (0, 0), "wood": (0, 4),
+    "plank": (33, 17), "flagstone": (0, 0), "dark": (3, 0), "wood": (0, 4),
     "sand": (35, 17), "dirt": (36, 17),
 }
 

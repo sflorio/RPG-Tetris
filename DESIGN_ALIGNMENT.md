@@ -293,6 +293,30 @@ triggers are all authored against cell coordinates, so `check_maps.py` asserts t
 the set of walkable cells is identical before and after — 346 walkable cells out of
 2,899 tiled ones, with nothing gained or lost.
 
+### Painting decisions, and why
+
+The first pass was a faithful retile that looked bad. What fixed it, recorded so it is not
+undone:
+
+- **Canopy blocks are not wallpaper.** Each tree set is a 3x3 *grove*, not a repeating texture.
+  The broadleaf block draws trunks and roots along its bottom row and a trunk hint down its outer
+  columns; tiling it stripes a wood every third row and speckles it with trunks. Those tiles
+  belong on the edge of the tree mass, and the clean middle tile fills the interior. The conifer
+  blocks are built the other way up -- their first row is where the tops are clear -- so that row
+  goes on the north edge.
+- **Roofs use plain brick, never the Oryx wall run.** The run carries a shadowed front face over
+  most of the tile. It is right for a dungeon wall and wrong for a roof: a house built from it
+  reads as a black box sitting on grass. Row 3 is also the only warm red in the pack, which is
+  why the roofs are brick and the walls grey.
+- **Paths are brown earth, not pale sand.** Oryx's own overworld mockups run dirt tracks through
+  grass; pale sand at this width read as a beach.
+- **No autumn stands.** The orange tree set next to the village read as a stain. Woods are the
+  two greens.
+- **The wood gets a ring of shade.** Dark forest floor one cell beyond the canopy, so the trees
+  stand in their own shade rather than on bright lawn. Under the canopy alone it would be
+  invisible.
+- **Open grass gets sparse flowers.** A field of one tile is flat however good the tile is.
+
 ### The 16px to 24px migration
 
 Cell size moved from 16 to 24 in `overworld/maps/gbprops.tres`. Cell coordinates
