@@ -13,11 +13,6 @@ OUT = os.path.join(oa.ROOT, "overworld", "maps", "tilesets", "oryx_world.tres")
 SIDES = ["top_side", "right_side", "bottom_side", "left_side"]  # bit 8, 4, 2, 1
 
 
-# Tiles whose region says one thing and whose use says another. The brick floor doubles as the
-# top of a building, so it has to stop movement wherever it is painted.
-BLOCKED_ANYWAY = set(oa.ROOF_FILL)
-
-
 def is_blocked(col, row):
     """Whether a tile stops movement. Read off how the sheet is laid out."""
     if row <= 12:                       # the dungeon block
@@ -52,8 +47,6 @@ def tree_or_scatter_blocked(col, row):
 
 
 def blocked(col, row):
-    if (col, row) in BLOCKED_ANYWAY:
-        return True
     override = tree_or_scatter_blocked(col, row)
     return is_blocked(col, row) if override is None else override
 

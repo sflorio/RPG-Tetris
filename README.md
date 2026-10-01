@@ -140,7 +140,9 @@ release that supports Godot 4.7.
 ### Art direction
 
 Everything visible is Oryx 16-bit Fantasy: the overworld tiles, the unit
-portraits and the combat effects. Town, House and Forest were rebuilt on the
+portraits and the combat effects. The exception is the town's buildings — the
+pack has none, so the roofs, walls, windows and doors are drawn by
+`tools/make_buildings.py` in the pack's own palette. Town, House and Forest were rebuilt on the
 pack's 24px world tiles, which moved the gameboard from 16px cells to 24px — the
 rebuild is scripted in `tools/` and described in
 [DESIGN_ALIGNMENT.md](DESIGN_ALIGNMENT.md) §7. The overworld *characters* are

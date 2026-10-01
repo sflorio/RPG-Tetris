@@ -173,12 +173,12 @@ position = Vector2(0, -12)
 [node name="OpenDoor" type="Sprite2D" parent="Area2D" index="1"]
 texture = ExtResource("2_4mdkx")
 region_enabled = true
-region_rect = Rect2(696, 192, 24, 24)
+region_rect = Rect2(1560, 960, 24, 24)
 
 [node name="ClosedDoor" type="Sprite2D" parent="Area2D" index="2"]
 texture = ExtResource("2_4mdkx")
 region_enabled = true
-region_rect = Rect2(672, 192, 24, 24)
+region_rect = Rect2(1536, 960, 24, 24)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." index="3"]
 libraries = {

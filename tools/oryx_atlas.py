@@ -73,13 +73,17 @@ WALLS = {
     "sea":    {"row": 10, "run": [8, 9, 17], "window": None},
 }
 
-# Plain brick, used for the body of a roof above its eave.
-ROOF_FILL = [(0, 3), (1, 3), (2, 3)]
-
 FLOOR = {
     "plank": (33, 17), "flagstone": (0, 0), "dark": (3, 0), "wood": (0, 4),
     "sand": (35, 17), "dirt": (36, 17),
 }
+
+# The house kit drawn by make_buildings.py. The pack has no buildings of its own, so these are
+# generated into the spare corner of the atlas; see that file for why and for the layout.
+def house_kit():
+    import make_buildings
+    return make_buildings.coords()
+
 
 DOORS = {
     "wood_closed": (28, 8), "wood_open": (29, 8), "wood_barred": (30, 8),

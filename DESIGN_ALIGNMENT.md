@@ -261,10 +261,17 @@ becomes `assets/tiles/oryx_world.png`.
 - **Seven tree species**, each a seamless 3x3 canopy block plus two single trees.
 - Wall runs in ten colourways, fences, doors, and a full set of interior props.
 
-The one real gap is **village buildings**: there are no tiled roofs or house
-facades. The town's houses are composed instead — plain brick for the roof body,
-the brick wall run along the eave so it casts a front shadow, grey stone with
-barred windows for the ground floor, and a wooden door.
+The one real gap is **village buildings**: no tiled roofs, no house facades,
+nothing. Composing them out of the pack's dungeon wall tiles was tried and does
+not work — whatever the arrangement, the result reads as a wall seen from above,
+because that is what those tiles are. So the house kit is **drawn**, by
+`tools/make_buildings.py`, into a spare corner of the atlas: a shingled roof with
+a ridge, a slope and an overhanging eave, and a plastered wall with corner quoins,
+a plinth, lit windows and a door, in nine roof pieces and fifteen wall pieces.
+The colours are sampled from the pack's own terracotta and stonework so the
+buildings sit with the rest of the sheet, and the Door gamepiece uses a matching
+free-standing doorway so the door you walk through looks like the ones painted
+into the walls.
 
 ### How the maps are built
 
@@ -304,10 +311,16 @@ undone:
   belong on the edge of the tree mass, and the clean middle tile fills the interior. The conifer
   blocks are built the other way up -- their first row is where the tops are clear -- so that row
   goes on the north edge.
-- **Roofs use plain brick, never the Oryx wall run.** The run carries a shadowed front face over
-  most of the tile. It is right for a dungeon wall and wrong for a roof: a house built from it
-  reads as a black box sitting on grass. Row 3 is also the only warm red in the pack, which is
-  why the roofs are brick and the walls grey.
+- **Houses are drawn, not composed.** Two passes were spent trying to build them from the pack's
+  wall tiles. The wall run carries a shadowed front face over most of the tile, so a roof made of
+  it is a black box on grass; plain brick instead is flat and ridgeless. Neither reads as a
+  building, because a top-down house needs a ridge, a slope, an eave and a plinth, and the pack
+  has none of those. `tools/make_buildings.py` draws them.
+- **Each building is walked by row and column.** The old art says which cells are roof, wall,
+  door and window; it cannot say where a cell sits in its own building, which is exactly what a
+  roof needs. The Buildings layer is split into connected groups and each is walked, so the top
+  roof course gets the ridge, the bottom gets the eave, and the outer columns get the gable
+  edges.
 - **Paths are brown earth, not pale sand.** Oryx's own overworld mockups run dirt tracks through
   grass; pale sand at this width read as a beach.
 - **No autumn stands.** The orange tree set next to the village read as a stain. Woods are the

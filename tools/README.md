@@ -13,7 +13,7 @@ the pack; everything after it works from `assets/tiles/oryx_world.png`.
 Run in this order. Each step is idempotent.
 
 ```bash
-python tools/make_world_atlas.py   # Oryx sheet -> assets/tiles/oryx_world.png
+python tools/make_world_atlas.py   # Oryx sheet + house kit -> assets/tiles/oryx_world.png
 python tools/build_tileset.py      # -> overworld/maps/tilesets/oryx_world.tres
 python tools/apply_maps.py         # rebuild the maps and write src/main.tscn
 python tools/check_maps.py         # assert the gameboard did not change
@@ -30,7 +30,8 @@ python tools/render_map.py old     # the same maps before the retile, for compar
 
 | File | Job |
 |---|---|
-| `make_world_atlas.py` | keys pure black out of the Oryx world sheet and bakes in the one terrain piece the pack omits |
+| `make_world_atlas.py` | keys pure black out of the Oryx world sheet, bakes in the one terrain piece the pack omits, and paints the house kit |
+| `make_buildings.py` | draws the roofs, walls, windows and doors the pack has none of |
 | `oryx_atlas.py` | the catalogue: which coordinates are terrain, trees, walls, floors, doors, props |
 | `build_tileset.py` | writes the TileSet, deriving terrain peering bits from the artwork and setting `IsCellBlocked` |
 | `build_maps.py` | decides what every cell becomes; this is the file to edit to change how a map looks |

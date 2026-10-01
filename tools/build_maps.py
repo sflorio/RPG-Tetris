@@ -210,6 +210,7 @@ def build(painter, old):
             cover.append(cell + (SRC,) + painter.autotile(name, cell, members) + (0,))
     plain = set(classes) - {(c[0], c[1]) for c in cover} - town_trees
     cover += meadow(painter, plain)
+    cover += passages(old["Field/Map/Town/Buildings"])
     out["Field/Map/Town/GroundCover"] = cover
 
     out["Field/Map/Town/Buildings"] = buildings(painter, old["Field/Map/Town/Buildings"])
@@ -282,23 +283,70 @@ def scenery(painter, cells):
     return out
 
 
-def buildings(painter, cells):
+def passages(building_cells):
+    """Shaded floor where a walkable cell is enclosed by a building.
+
+    The old town has one: a gap in a wall with roof above it and wall either side. Left as grass
+    it reads as a hole knocked in the house; as dark floor it reads as the archway it is."""
+    cells = {(x, y) for x, y, s, ax, ay, _ in building_cells}
     out = []
-    for x, y, s, ax, ay, _ in cells:
-        cell = (x, y)
-        kind = classify_building_cell(ax, ay)
-        if kind == "roof":
-            # Plain brick, never the Oryx wall run. The run carries a shadowed front face that
-            # covers most of the tile, and a roof built from it reads as a black box on the grass.
-            # The one shadow line a house gets is the base of its wall, below.
-            coord = painter._pick(oa.ROOF_FILL, cell)
-        elif kind == "door":
-            coord = oa.DOORS["wood_closed"]
-        elif kind == "window":
-            coord = oa.WALLS["stone"]["window"]
-        else:
-            coord = painter.wall("stone", cell)
-        out.append((x, y, SRC) + coord + (0,))
+    for x, y in sorted({(x, y + 1) for x, y in cells}):
+        if (x, y) not in cells and (x - 1, y) in cells and (x + 1, y) in cells:
+            out.append((x, y, SRC) + oa.FLOOR["dark"] + (0,))
+    return out
+
+
+def components(cells):
+    """Splits a set of cells into 4-connected groups -- one per building."""
+    remaining, groups = set(cells), []
+    while remaining:
+        seed = remaining.pop()
+        group, queue = {seed}, [seed]
+        while queue:
+            x, y = queue.pop()
+            for n in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if n in remaining:
+                    remaining.discard(n)
+                    group.add(n)
+                    queue.append(n)
+        groups.append(group)
+    return groups
+
+
+def buildings(painter, cells):
+    """Composes each house from the generated kit: a ridge, an eave, and a wall under it.
+
+    The old art says which cells are roof and which are wall, and which of the wall cells are the
+    door and the windows. What it cannot say is where each cell sits in its own building, which is
+    what a roof needs to read as a roof -- so the buildings are separated out and each one is
+    walked by row and column.
+    """
+    kit = oa.house_kit()
+    kinds = {(x, y): classify_building_cell(ax, ay) for x, y, s, ax, ay, _ in cells}
+    out = []
+
+    for group in components(kinds):
+        roof = sorted(c for c in group if kinds[c] == "roof")
+        wall = sorted(c for c in group if kinds[c] != "roof")
+        roof_rows = sorted({c[1] for c in roof})
+        wall_rows = sorted({c[1] for c in wall})
+
+        for cell in group:
+            x, y = cell
+            row = [c for c in group if c[1] == y]
+            side = ("left" if x == min(c[0] for c in row)
+                    else "right" if x == max(c[0] for c in row) else "mid")
+            if kinds[cell] == "roof":
+                part = ("ridge" if y == roof_rows[0]
+                        else "eave" if y == roof_rows[-1] else "slope")
+                name = "roof_%s_%s" % (part, side)
+            else:
+                # One course of wall is both the top of the wall and its base.
+                storey = ("sole" if len(wall_rows) == 1
+                          else "top" if y == wall_rows[0] else "low")
+                part = kinds[cell] if kinds[cell] in ("door", "window") else side
+                name = "wall_%s_%s" % (storey, part)
+            out.append((x, y, SRC) + kit[name] + (0,))
     return out
 
 
