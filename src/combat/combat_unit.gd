@@ -31,6 +31,13 @@ var cast_progress: = 0
 ## Active status effects, keyed by effect id.
 var effects: Dictionary = {}
 
+## The character's Trait, from [Characters]. Empty for generated enemies.
+var unit_trait: = ""
+
+## Olister's Vicious Aim: one stack per line he clears, each worth Perfect Strike Chance, lasting
+## until the end of combat.
+var vicious_aim_stacks: = 0
+
 
 func _init(unit_stats: UnitStats = null, ally: bool = false) -> void:
 	stats = unit_stats if unit_stats != null else UnitStats.new()
@@ -46,11 +53,29 @@ func is_downed() -> bool:
 	return hp <= 0
 
 
+## This unit's Perfect Strike Chance including anything combat has added to it, which today is
+## Olister's Vicious Aim.
+func get_perfect_strike_chance() -> float:
+	return stats.perfect_strike_chance \
+		+ vicious_aim_stacks*Characters.VICIOUS_AIM_PER_STACK
+
+
+## Called when this unit clears a line, for Traits that build up over a battle.
+func on_line_cleared() -> void:
+	if unit_trait == Characters.TRAIT_VICIOUS_AIM:
+		vicious_aim_stacks += 1
+
+
 ## Applies damage and returns how much was actually dealt, capped by remaining health so overkill
 ## doesn't leak onto the next unit.
 ##
-## Shield halves the damage and is consumed a stack at a time, per the design.
+## Shield halves the damage and is consumed a stack at a time, per the design. Wilhelm's
+## Shieldbearer Trait can drop the hit entirely before any of that.
 func take_damage(amount: int) -> int:
+	if unit_trait == Characters.TRAIT_SHIELDBEARER \
+			and randf() < Characters.SHIELDBEARER_CHANCE:
+		return 0
+
 	var incoming: = amount
 	var shield: StatusEffect = effects.get(StatusEffectDefs.SHIELD)
 	if shield != null:

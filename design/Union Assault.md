@@ -1,0 +1,2 @@
+As lines are cleared, the Party's Union meter will fill. After a total of 10 lines have been cleared, the player's Union Assault will automatically be triggered and the Union meter reset.
+- It is possible to clear 13 lines as part of this threshold. For each line over 10, the damage/potency will be increased by 10%.

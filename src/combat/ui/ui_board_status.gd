@@ -9,7 +9,7 @@ class_name UIBoardStatus extends HBoxContainer
 ## that only drain health.
 const TRACKED: Array[String] = [
 	StatusEffectDefs.BLIND,
-	StatusEffectDefs.SHOCKED,
+	StatusEffectDefs.SHOCK,
 	StatusEffectDefs.CONFUSION,
 	StatusEffectDefs.INFECTION,
 ]
@@ -17,7 +17,7 @@ const TRACKED: Array[String] = [
 ## What each one actually does to the board, in the player's terms.
 const EXPLANATIONS: = {
 	StatusEffectDefs.BLIND: "board hidden",
-	StatusEffectDefs.SHOCKED: "cannot rotate",
+	StatusEffectDefs.SHOCK: "cannot rotate",
 	StatusEffectDefs.CONFUSION: "preview hidden",
 	StatusEffectDefs.INFECTION: "corrupted blocks",
 }

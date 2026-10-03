@@ -13,12 +13,20 @@ const T: = 5
 const Z: = 6
 const S: = 7
 
+## The design's names for the shapes. Right Lance is the L piece and Left Lance the J, read off the
+## shape images in the Block Types note.
 const NAMES: = {
-	I: "LINE", J: "J", L: "L", O: "SQUARE", T: "T", Z: "Z", S: "S",
+	I: "TOWER",
+	J: "LEFT LANCE",
+	L: "RIGHT LANCE",
+	O: "SQUARE",
+	T: "BRIDGE",
+	Z: "LEFT BOLT",
+	S: "RIGHT BOLT",
 }
 
-## The blocks that can be assigned to a character. The Line block is deliberately absent: the design
-## reserves it for triggering Rally Strikes, and Anima are not assigned to it.
+## The blocks that can be assigned to a character. Tower is deliberately absent: the design reserves
+## it for triggering Rally Strikes and says it is the only Block Type that cannot be assigned.
 const ASSIGNABLE: Array[int] = [O, T, J, L, S, Z]
 
 ## Every block, in display order.

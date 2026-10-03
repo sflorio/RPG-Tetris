@@ -57,7 +57,7 @@ const SHAKE_MAX: = 22.0
 
 ## Screen flash colour per attack weight. A Union Assault washes the screen; a jab does not flash.
 const FLASH_COLORS: = {
-	AttackResolver.Kind.SPECIAL_BOOSTED: Color(0.55, 0.45, 1.0),
+	AttackResolver.Kind.ADVANCED_BOOSTED: Color(0.55, 0.45, 1.0),
 	AttackResolver.Kind.RALLY_STRIKE: Color(1.0, 0.85, 0.35),
 	AttackResolver.Kind.UNION_ASSAULT: Color(1.0, 0.35, 0.45),
 }
@@ -333,15 +333,24 @@ func _on_lines_cleared(count: int, block_type: int) -> void:
 	var rallied: Array[StatusEffect] = []
 
 	if count >= 4:
-		# Four lines is only reachable with the Line block, and rallies the whole team.
+		# Four lines is only reachable with the Tower block, and rallies the whole team.
 		for ally in config.get_active_allies():
-			results.append(AttackResolver.resolve(ally, target, AttackResolver.Kind.RALLY_STRIKE))
-			# Stands in for an equipped Rally Strike. The only one the design spells out is
-			# Doublestep ("all allies gain two stacks of Shield"), so that is what rallying does
-			# until Rally Strikes are modelled per character.
-			var shield: = ally.apply_effect(StatusEffectDefs.SHIELD, StatusEffect.TIER_STRONG)
-			if shield != null and rallied.is_empty():
-				rallied.append(shield)
+			results.append(AttackResolver.resolve(
+				ally, target, AttackResolver.Kind.RALLY_STRIKE, config.party.level
+			))
+			ally.on_line_cleared()
+			# Rally Strikes that buff the team do so here. Wilhelm's Formation gives every ally
+			# Shield; a character the design has not written one for falls back to the same.
+			var boons: Array = Characters.RALLY_ALLY_EFFECTS.get(
+				ally.display_name, [StatusEffectDefs.SHIELD])
+			for boon: String in boons:
+				var effect: = ally.apply_effect(boon)
+				if effect != null and rallied.is_empty():
+					rallied.append(effect)
+			# Olister's Marked for Death inflicts one of three ailments instead of buffing.
+			var ailments: Array = Characters.RALLY_ENEMY_AILMENTS.get(ally.display_name, [])
+			if not ailments.is_empty():
+				target.apply_effect(ailments.pick_random())
 		_ally_roster.refresh()
 		CombatFX.spawn(
 			self, CombatFX.GUARD, _player_board_rect.get_center(), 150.0, 14
@@ -352,15 +361,20 @@ func _on_lines_cleared(count: int, block_type: int) -> void:
 		# clears the line and fills the Union meter, it just deals no damage.
 		var attacker: = config.find_ally_for_block(block_type)
 		if attacker != null:
+			var kind: = AttackResolver.kind_for_lines(count)
 			results.append(
-				AttackResolver.resolve(attacker, target, AttackResolver.kind_for_lines(count))
+				AttackResolver.resolve(attacker, target, kind, config.party.level)
 			)
+			attacker.on_line_cleared()
+			# Clearing a line with a Stunned unit's block clears the Stun, per the design.
+			attacker.remove_effect(StatusEffectDefs.STUN)
+			_apply_ability_effects(AttackResolver.ability_for(attacker, kind), target)
 
 	var union_bonus: = union_meter.add_lines(count)
 	if union_bonus > 0.0:
 		for ally in config.get_active_allies():
 			results.append(AttackResolver.resolve(
-				ally, target, AttackResolver.Kind.UNION_ASSAULT, union_bonus
+				ally, target, AttackResolver.Kind.UNION_ASSAULT, config.party.level, union_bonus
 			))
 
 	_apply_results(results, config.enemies, _enemy_roster, _enemy_board_rect)
@@ -374,6 +388,17 @@ func _on_lines_cleared(count: int, block_type: int) -> void:
 
 	if _get_front_unit(config.enemies) == null:
 		_end_battle(true)
+
+
+# Applies whatever an ability inflicts on its target, e.g. Shield Bash's Stun-. Returns the effects
+# that actually took hold, since the design's Compound Effects can cancel one out instead.
+func _apply_ability_effects(ability: Ability, target: CombatUnit) -> Array[StatusEffect]:
+	var applied: Array[StatusEffect] = []
+	for id in ability.effects:
+		var effect: = target.apply_effect(id, ability.effect_tier)
+		if effect != null:
+			applied.append(effect)
+	return applied
 
 
 # --- The enemy team's turn ---------------------------------------------------------------------
@@ -518,7 +543,7 @@ func _refresh_board_effects() -> void:
 		var ally: = config.allies[i]
 		if ally.is_downed():
 			continue
-		shocked = shocked or ally.has_effect(StatusEffectDefs.SHOCKED)
+		shocked = shocked or ally.has_effect(StatusEffectDefs.SHOCK)
 		confused = confused or ally.has_effect(StatusEffectDefs.CONFUSION)
 		if ally.has_effect(StatusEffectDefs.BLIND):
 			blinded_positions.append(i % _fog_panels.size())
@@ -552,7 +577,8 @@ func _resolve_enemy_attacks(attackers: Array[CombatUnit]) -> void:
 	var results: Array[AttackResult] = []
 	var applied: Array[StatusEffect] = []
 	for enemy in attackers:
-		var result: = AttackResolver.resolve(enemy, target, AttackResolver.Kind.BASIC)
+		var result: = AttackResolver.resolve(
+			enemy, target, AttackResolver.Kind.BASIC, config.party.level)
 		results.append(result)
 		if not result.was_dodged and randf() < ENEMY_STATUS_CHANCE:
 			var inflicted: String = StatusEffectDefs.ENEMY_INFLICTABLE.pick_random()

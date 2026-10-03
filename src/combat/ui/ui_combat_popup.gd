@@ -20,8 +20,8 @@ const DETAIL_OUTLINE: = 6
 ## Call-outs per attack kind. More punctuation means a heavier hit.
 const KIND_CALLOUTS: = {
 	AttackResolver.Kind.BASIC: "HIT",
-	AttackResolver.Kind.SPECIAL: "SPECIAL!",
-	AttackResolver.Kind.SPECIAL_BOOSTED: "SUPER SPECIAL!!",
+	AttackResolver.Kind.ADVANCED: "ADVANCED!",
+	AttackResolver.Kind.ADVANCED_BOOSTED: "SUPER ADVANCED!!",
 	AttackResolver.Kind.RALLY_STRIKE: "RALLY STRIKE!!",
 	AttackResolver.Kind.UNION_ASSAULT: "UNION ASSAULT!!!",
 }
@@ -29,8 +29,8 @@ const KIND_CALLOUTS: = {
 ## Colour per attack kind, warming up as the attack gets heavier.
 const KIND_COLORS: = {
 	AttackResolver.Kind.BASIC: Color("e2e8f0"),
-	AttackResolver.Kind.SPECIAL: Color("5fd4ff"),
-	AttackResolver.Kind.SPECIAL_BOOSTED: Color("8b7bff"),
+	AttackResolver.Kind.ADVANCED: Color("5fd4ff"),
+	AttackResolver.Kind.ADVANCED_BOOSTED: Color("8b7bff"),
 	AttackResolver.Kind.RALLY_STRIKE: Color("ffc94d"),
 	AttackResolver.Kind.UNION_ASSAULT: Color("ff5e7a"),
 }
@@ -112,7 +112,7 @@ func play_status(applied: Array[StatusEffect], unit: CombatUnit, rect: Rect2) ->
 		DETAIL_FONT_SIZE, DETAIL_OUTLINE, Color("cbd5e1"), NAME_FONT_SIZE + 4.0
 	))
 
-	_animate(AttackResolver.Kind.SPECIAL, false)
+	_animate(AttackResolver.Kind.ADVANCED, false)
 
 
 ## Announces something that is neither an attack nor a status change, such as Infection pushing a
@@ -130,7 +130,7 @@ func play_notice(headline: String, subtitle: String, color: Color, rect: Rect2) 
 			subtitle, DETAIL_FONT_SIZE, DETAIL_OUTLINE, Color("cbd5e1"), NAME_FONT_SIZE + 4.0
 		))
 
-	_animate(AttackResolver.Kind.SPECIAL, false)
+	_animate(AttackResolver.Kind.ADVANCED, false)
 
 
 # A hard scale punch, a settle, then a drift upward as it fades. The heavier the attack, the more
@@ -194,10 +194,18 @@ func _build_detail(results: Array[AttackResult], any_crit: bool) -> String:
 	if any_crit:
 		parts.append("PERFECT STRIKE")
 
+	# The type chart's verdict, when it is anything other than neutral.
+	for result in results:
+		var matchup: = TypeChart.get_callout(result.type_multiplier)
+		if not matchup.is_empty() and matchup not in parts:
+			parts.append(matchup)
+
+	# Who attacked, and with what. The design names every ability, so say the name.
 	var names: Array[String] = []
 	for result in results:
-		if result.attacker_name not in names:
-			names.append(result.attacker_name)
+		var who: = "%s - %s" % [result.attacker_name, result.get_action_name()]
+		if who not in names:
+			names.append(who)
 	if not names.is_empty():
 		parts.append(", ".join(names))
 

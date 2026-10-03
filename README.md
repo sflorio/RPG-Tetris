@@ -86,14 +86,20 @@ status effects, Xenoblocks, and the files to edit for each.
 | Techniques, Soul Gems, Trinkets, Constellations, Field Actions | **not started** |
 | Audio | **none** |
 
-Characters and enemies use Oryx sprites mapped onto the design's names — Soldier
-and Archer against Xeno Drone and Xeno Stalker — but they are still GDQuest's
-placeholder battlers underneath, with the stats and arenas to match.
+Characters and enemies use Oryx sprites mapped onto the design's cast — Wilhelm
+the Soldier and Olister the Archer against Xeno Drone and Xeno Stalker — but they
+are still GDQuest's placeholder battlers underneath, with the arenas to match.
 `src/combat/unit_appearance.gd` does that mapping and goes away once real units
-exist. The damage formula and enemy cast times
-are first-pass numbers, not designed ones — both are flagged in the code.
+exist. Damage follows the design's equation and type chart exactly; the *stat
+values* do not, because the vault has not written any, so three constants in
+`tetris_battle_config.gd` map the legacy numbers onto its scale. Enemy cast times
+are likewise a placeholder. All of it is flagged in the code.
 
 ## Design source
+
+`https://publish.obsidian.md/projectfour` is the source of truth.
+`python tools/fetch_design_vault.py` snapshots it into `design/`, so changes to
+the design are a `git diff` rather than a re-read.
 
 The game is specified in an Obsidian vault at
 [publish.obsidian.md/projectfour](https://publish.obsidian.md/projectfour).

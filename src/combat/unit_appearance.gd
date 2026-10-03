@@ -1,12 +1,13 @@
-## Maps the OpenRPG placeholder battlers onto the design's classes and alien invaders.
+## Maps the OpenRPG placeholder battlers onto the design's characters and alien invaders.
 ##
 ## The arenas still reference GDQuest's demo battlers (bear, squirrel, bugcat, wolf), because the
-## real characters and bestiary do not exist yet. Rather than rewrite every arena scene and stats
-## resource for placeholders that will be replaced anyway, the name and portrait are swapped here at
-## the point the battle is built.
+## real encounters do not exist yet. Rather than rewrite every arena scene and stats resource for
+## placeholders that will be replaced anyway, the name and portrait are swapped here at the point
+## the battle is built.
 ##
-## When real units arrive this file goes away: give each one its own stats resource, and the
-## convention in [TetrisBattleConfig] picks up the matching art automatically.
+## The three player battlers become Wilhelm, Olister and Rena, so they pick up the abilities and
+## Traits in [Characters]. When real encounters arrive this file goes away: give each unit its own
+## stats resource and the convention in [TetrisBattleConfig] picks up the matching art.
 class_name UnitAppearance extends RefCounted
 
 ## Where the unit art lives.
@@ -14,10 +15,10 @@ const SPRITE_DIR: = "res://assets/units/"
 
 ## Source battler name -> how it should appear. Keys are lower case.
 const APPEARANCES: = {
-	# Active team.
-	"bear": {"name": "Soldier", "sprite": "soldier"},
-	"squirrel": {"name": "Archer", "sprite": "archer"},
-	"gobot": {"name": "Mage", "sprite": "mage"},
+	# The party, from the design's Characters note.
+	"bear": {"name": "Wilhelm", "sprite": "soldier"},
+	"squirrel": {"name": "Olister", "sprite": "archer"},
+	"gobot": {"name": "Rena", "sprite": "cleric"},
 	# The invaders.
 	"bugcat": {"name": "Xeno Drone", "sprite": "xeno_drone"},
 	"wolf": {"name": "Xeno Stalker", "sprite": "xeno_stalker"},
@@ -26,7 +27,7 @@ const APPEARANCES: = {
 
 ## Art that exists but is not yet assigned to a battler, ready for real units.
 const UNUSED_SPRITES: Array[String] = [
-	"cleric", "barbarian", "thief", "xeno_crawler", "xeno_swarm", "xeno_ooze",
+	"mage", "barbarian", "thief", "xeno_crawler", "xeno_swarm", "xeno_ooze",
 ]
 
 

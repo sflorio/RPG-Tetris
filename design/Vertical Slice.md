@@ -1,0 +1,17 @@
+- [ ] Starting Area
+	- [ ] Can move around
+	- [ ] Obstacles that block movement
+	- [ ] NPC
+		- [ ] Can interact with NPC for dialogue
+			- [ ] Dialogue has multiple sections between player and NPC
+			- [ ] Dialogue has choices that lead to different outcomes
+	- [ ] Second NPC
+		- [ ] Can interact with NPC to fight
+	- [ ] Doorway that leads to inside (Pokemon style)
+		- [ ] Inside that leads to additional sublayer
+	- [ ] Item on ground
+		- [ ] Item blocks movement
+		- [ ] Item can be picked up
+		- [ ] Item is removed from environment after pick up
+	- [ ] Can move to secondary area
+		- [ ] Secondary area has same requirements

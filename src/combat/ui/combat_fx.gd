@@ -21,8 +21,8 @@ const GUARD: = "guard"
 ## Which effect suits each attack, so a jab and a Union Assault do not look alike.
 const ATTACK_EFFECTS: = {
 	AttackResolver.Kind.BASIC: HIT_SMALL,
-	AttackResolver.Kind.SPECIAL: HIT_SLASH,
-	AttackResolver.Kind.SPECIAL_BOOSTED: HIT_BIG,
+	AttackResolver.Kind.ADVANCED: HIT_SLASH,
+	AttackResolver.Kind.ADVANCED_BOOSTED: HIT_BIG,
 	AttackResolver.Kind.RALLY_STRIKE: RALLY,
 	AttackResolver.Kind.UNION_ASSAULT: UNION,
 }

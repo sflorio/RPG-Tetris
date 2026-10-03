@@ -4,12 +4,15 @@
 ## [CombatUnit]s: player Battlers form the active team, enemy Battlers the opposing team.
 ##
 ## Block types are handed out across the active team, so clearing a line with a given block makes
-## the character holding it attack. The Line block is never assigned — the design reserves it for
+## the character holding it attack. The Tower block is never assigned — the design reserves it for
 ## Rally Strikes.
 class_name TetrisBattleConfig extends RefCounted
 
 ## Junk blocks seeded on the board per point of total enemy attack, so combat never starts empty.
 const ATTACK_PER_JUNK_ROW: = 5
+
+## "Start of combat junk block arrangements should never exceed the fifth line."
+const MAX_JUNK_ROWS: = 5
 
 ## The player's active team.
 var allies: Array[CombatUnit] = []
@@ -17,13 +20,13 @@ var allies: Array[CombatUnit] = []
 ## The units to defeat.
 var enemies: Array[CombatUnit] = []
 
-## Party-wide stats, including Gravity and the unlocked Psionic Powers.
+## Party-wide stats, including Party Level, Gravity and the unlocked Psionic Powers.
 var party: PartyStats = PartyStats.new()
 
 ## Junk rows stacked on the board when combat begins.
 var junk_rows: = 0
 
-## Human-readable summary of the opposing side, e.g. "Bugcat x2, Wolf".
+## Human-readable summary of the opposing side, e.g. "Xeno Drone x2, Xeno Stalker".
 var enemy_description: = "a mysterious foe"
 
 
@@ -60,9 +63,10 @@ static func from_arena(arena: PackedScene, party_stats: PartyStats = null) -> Te
 
 		var enemy: = CombatUnit.new(_build_stats(battler, enemy_name), false)
 		enemy.icon = _load_unit_icon(battler)
-		# Faster enemies act more often. The design gives enemies cast bars but no cast-time stat,
-		# so this is derived from speed and is a placeholder.
-		enemy.cast_rounds = clampi(roundi(120.0 / maxf(battler.stats.base_speed, 1.0)), 2, 8)
+		# Faster enemies act more often. The design gives enemies cast bars but no cast-time
+		# stat -- its Speed is a weighting on block generation -- so this is derived and is a
+		# placeholder, tuned so an encounter is winnable against the type chart.
+		enemy.cast_rounds = clampi(roundi(180.0 / maxf(battler.stats.base_speed, 1.0)), 3, 8)
 		config.enemies.append(enemy)
 
 	for battler in roster.get_player_battlers():
@@ -71,16 +75,17 @@ static func from_arena(arena: PackedScene, party_stats: PartyStats = null) -> Te
 		var ally_name: = _get_unit_name(battler)
 		var ally: = CombatUnit.new(_build_stats(battler, ally_name), true)
 		ally.icon = _load_unit_icon(battler)
+		ally.unit_trait = Characters.get_trait(ally_name)
 		config.allies.append(ally)
 
 	config._assign_block_types()
 
 	if not enemy_counts.is_empty():
-		config.junk_rows = total_attack / ATTACK_PER_JUNK_ROW
+		config.junk_rows = mini(total_attack / ATTACK_PER_JUNK_ROW, MAX_JUNK_ROWS)
 		config.enemy_description = _describe(enemy_counts)
 
 	if combat_arena.tetris_junk_rows >= 0:
-		config.junk_rows = combat_arena.tetris_junk_rows
+		config.junk_rows = mini(combat_arena.tetris_junk_rows, MAX_JUNK_ROWS)
 
 	instance.free()
 	if config.enemies.is_empty() or config.allies.is_empty():
@@ -118,16 +123,39 @@ func _assign_block_types() -> void:
 		allies[i % allies.size()].block_types.append(BlockTypes.ASSIGNABLE[i])
 
 
-# OpenRPG's BattlerStats predate the design's stat list, so map what exists and use the design's
-# defaults for the rest.
+## The design gives the damage equation and every ability's Power, but no HP, Offense or Defense
+## for any unit — so the legacy OpenRPG battler numbers are mapped onto its scale here.
+##
+## The equation is very sensitive to the ratio of Offense to Defense, and the type chart's
+## multiplier is applied after the value has already been floored. Leave Offense and Defense level
+## with each other and every attack in the game rounds to 1: a Basic Attack, an Advanced Attack and
+## a Rally Strike all land for the same damage, which reads as the clears not mattering. These
+## three constants spread them back out, and are the first thing to delete once the vault writes
+## unit stats.
+const LEGACY_HP_SCALE: = 0.3
+const LEGACY_OFFENSE_SCALE: = 3.0
+const LEGACY_DEFENSE_SCALE: = 0.3
+
+
+# OpenRPG's BattlerStats predate the design's stat list, so map what exists onto the design's stats
+# and take the rest from its defaults. A character the design has written up takes its Type from
+# the roster; anything unmapped is an invader and so Xeno.
 static func _build_stats(battler: Battler, unit_name: String) -> UnitStats:
+	var legacy: = battler.stats
 	var stats: = UnitStats.new()
 	stats.display_name = unit_name
-	stats.max_hp = battler.stats.base_max_health
-	stats.power = battler.stats.base_attack
-	stats.defense = battler.stats.base_defense
-	stats.barrier = battler.stats.base_defense
-	stats.dodge = maxf(1.0, float(battler.stats.base_evasion))
+	stats.max_hp = maxi(1, roundi(legacy.base_max_health * LEGACY_HP_SCALE))
+	stats.offense = maxi(1, roundi(legacy.base_attack * LEGACY_OFFENSE_SCALE))
+	stats.defense = maxi(1, roundi(legacy.base_defense * LEGACY_DEFENSE_SCALE))
+	stats.tech_offense = stats.offense
+	stats.tech_defense = stats.defense
+	stats.dodge = maxf(1.0, float(legacy.base_evasion))
+	# These placeholders leave hit chance at 0, which the design reads as "unset" rather than
+	# "never hits": its default Accuracy is 100%.
+	stats.accuracy = float(legacy.base_hit_chance) if legacy.base_hit_chance > 0 else 100.0
+	stats.speed = maxi(1, roundi(legacy.base_speed / 30.0))
+	stats.type = Characters.get_type(unit_name) if Characters.exists(unit_name) \
+		else UnitStats.Type.XENO
 	return stats
 
 
@@ -142,11 +170,12 @@ func _add_fallback_units() -> void:
 		var dummy_stats: = UnitStats.new()
 		dummy_stats.display_name = "Training Dummy"
 		dummy_stats.max_hp = 40
+		dummy_stats.type = UnitStats.Type.XENO
 		enemies.append(CombatUnit.new(dummy_stats, false))
 
 
 # Portraits come from [UnitAppearance], where the placeholder battlers are mapped onto the design's
-# classes and invaders. Anything unmapped falls back to the battler's own art, which follows the
+# characters and invaders. Anything unmapped falls back to the battler's own art, which follows the
 # same convention as its stats: "res://combat/battlers/bugcat/bugcat_stats.tres" implies
 # ".../bugcat.png".
 static func _load_unit_icon(battler: Battler) -> Texture2D:
@@ -167,7 +196,7 @@ static func _load_unit_icon(battler: Battler) -> Texture2D:
 
 
 # Battler nodes are named generically ("Battler2"), so units are named after their stats resource,
-# then remapped by [UnitAppearance] onto the design's classes and invaders.
+# then remapped by [UnitAppearance] onto the design's characters and invaders.
 static func _get_unit_name(battler: Battler) -> String:
 	var file_name: = battler.stats.resource_path.get_file().get_basename()
 	if file_name.is_empty():

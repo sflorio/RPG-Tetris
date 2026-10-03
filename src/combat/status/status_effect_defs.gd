@@ -17,21 +17,24 @@ const BLIND: = "Blind"
 const POISON: = "Poison"
 const BLEED: = "Bleed"
 const INFECTION: = "Infection"
+const STUN: = "Stun"
 
 # --- Board effects ---
-const SHOCKED: = "Shocked"
+const SHOCK: = "Shock"
 const CONFUSION: = "Confusion"
 const GOLDEN: = "Golden"
 const CHARGED: = "Charged"
-const BURNING: = "Burning"
-const FROZEN: = "Frozen"
-const THORNED: = "Thorned"
+const JUNKDROP: = "Junkdrop"
+const BURN: = "Burn"
+const FREEZE: = "Freeze"
+const THORNS: = "Thorns"
 
 ## Keyed by tier: -1 weak, 0 normal, +1 strong.
 const DEFS: = {
 	SHIELD: {
 		"positive": true, "implemented": true, "stacks": {-1: 1, 0: 1, 1: 2},
-		"note": "Halves incoming damage and consumes a stack.",
+		"rounds": {-1: 5, 0: 5, 1: 10},
+		"note": "Halves incoming damage and consumes a stack. Also times out.",
 	},
 	HASTE: {
 		"positive": true, "implemented": true, "rounds": {-1: 1, 0: 1, 1: 3},
@@ -47,12 +50,12 @@ const DEFS: = {
 		"note": "Hides a third of the board behind fog.",
 	},
 	POISON: {
-		"positive": false, "implemented": true, "rounds": {-1: 5, 0: 5, 1: 5},
+		"positive": false, "implemented": true, "rounds": {-1: 3, 0: 5, 1: 7},
 		"percent": {-1: 1.0, 0: 2.0, 1: 3.0},
 		"note": "Loses a percentage of max HP per Round.",
 	},
 	BLEED: {
-		"positive": false, "implemented": true, "rounds": {-1: 5, 0: 5, 1: 5},
+		"positive": false, "implemented": true, "rounds": {-1: 3, 0: 4, 1: 5},
 		"percent": {-1: 1.0, 0: 3.0, 1: 5.0},
 		"note": "Loses a percentage of current HP each time a block is rotated.",
 	},
@@ -60,9 +63,18 @@ const DEFS: = {
 		"positive": false, "implemented": true, "rounds": {-1: 3, 0: 5, 1: 7},
 		"note": "30% chance per infected unit to generate a Xenoblock on that team's board.",
 	},
-	SHOCKED: {
+	STUN: {
+		"positive": false, "implemented": true, "rounds": {-1: 3, 0: 5, 1: 7},
+		"note": "No attacks, Rally Strikes or Techniques. Cleared by clearing a line with "
+			+ "this unit's block.",
+	},
+	SHOCK: {
 		"positive": false, "implemented": true, "rounds": {-1: 1, 0: 3, 1: 5},
 		"note": "The team cannot rotate their active block.",
+	},
+	JUNKDROP: {
+		"positive": false, "implemented": false, "stacks": {-1: 1, 0: 1, 1: 2},
+		"note": "Drops extra blocks onto the board. Needs the board to accept a forced drop.",
 	},
 	CONFUSION: {
 		"positive": false, "implemented": true, "rounds": {-1: 1, 0: 3, 1: 5},
@@ -77,16 +89,18 @@ const DEFS: = {
 		"positive": true, "implemented": false, "rounds": {-1: 5, 0: 5, 1: 5},
 		"note": "Clearing charged blocks restores TP. Needs per-block state.",
 	},
-	BURNING: {
+	BURN: {
 		"positive": false, "implemented": false, "rounds": {-1: 7, 0: 5, 1: 3},
 		"note": "Blocks burn away, leaving holes. Needs per-block state.",
 	},
-	FROZEN: {
+	FREEZE: {
 		"positive": false, "implemented": false, "rounds": {-1: 5, 0: 5, 1: 5},
-		"note": "Blocks must be cleared twice. Needs per-block state.",
+		"note": "Blocks must be cleared twice, and the first clear does not attack. "
+			+ "Needs per-block state.",
 	},
-	THORNED: {
-		"positive": false, "implemented": false, "rounds": {-1: 5, 0: 5, 1: 5},
+	THORNS: {
+		"positive": false, "implemented": false, "rounds": {-1: 3, 0: 5, 1: 7},
+		"percent": {-1: 5.0, 0: 7.0, 1: 10.0},
 		"note": "Clearing thorned blocks damages the clearing character. Needs per-block state.",
 	},
 }
@@ -103,9 +117,9 @@ const CANCELS: = {
 const CALLOUTS: = {
 	SHIELD: "SHIELDED!", HASTE: "HASTED!", RENEW: "RENEWED!",
 	BLIND: "BLINDED!", POISON: "POISONED!", BLEED: "BLEEDING!", INFECTION: "INFECTED!",
-	SHOCKED: "SHOCKED!", CONFUSION: "CONFUSED!",
-	GOLDEN: "GOLDEN!", CHARGED: "CHARGED!",
-	BURNING: "BURNING!", FROZEN: "FROZEN!", THORNED: "THORNED!",
+	STUN: "STUNNED!", SHOCK: "SHOCKED!", CONFUSION: "CONFUSED!",
+	GOLDEN: "GOLDEN!", CHARGED: "CHARGED!", JUNKDROP: "JUNKDROP!",
+	BURN: "BURNING!", FREEZE: "FROZEN!", THORNS: "THORNED!",
 }
 
 
@@ -124,10 +138,12 @@ const GENERATION_BASED: Array[String] = [HASTE]
 const XENOBLOCK_CHANCE: = 0.30
 
 ## Negative effects an enemy can inflict today. Used to pick one at random when an attack lands.
-const ENEMY_INFLICTABLE: Array[String] = [POISON, BLEED, BLIND, SHOCKED, CONFUSION, INFECTION]
+const ENEMY_INFLICTABLE: Array[String] = [
+	POISON, BLEED, BLIND, STUN, SHOCK, CONFUSION, INFECTION,
+]
 
 ## Effects that act on the whole board rather than on one unit's body.
-const BOARD_SCOPED: Array[String] = [BLIND, SHOCKED, CONFUSION]
+const BOARD_SCOPED: Array[String] = [BLIND, SHOCK, CONFUSION]
 
 
 static func exists(id: String) -> bool:

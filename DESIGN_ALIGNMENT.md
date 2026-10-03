@@ -1,15 +1,17 @@
 # Design alignment: prototype vs. the projectfour vault
 
-Read against the design vault at `publish.obsidian.md/projectfour` (27 notes),
-this records where the current prototype matches the design, where it actively
-conflicts, and the order I'd change things in.
+Read against the design vault at `publish.obsidian.md/projectfour`, this records
+where the current prototype matches the design, where it actively conflicts, and
+the order I'd change things in. `design/` holds a dated snapshot of the vault so
+changes to it can be diffed; `tools/fetch_design_vault.py` refreshes it.
 
-**Status:** the twelve conflicts recorded below are all resolved. Combat now runs
-on two boards with character attacks, Rounds, the Union meter, unit and party
-stats, a scripted enemy team, Xenoblocks, and ten of the fourteen status effects.
+**Status:** the twelve conflicts recorded below are all resolved. Combat runs on
+two boards with named characters, their own abilities, the design's damage
+equation and type chart, Rounds, the Union meter, unit and party stats, a
+scripted enemy team, Xenoblocks, and eleven of the sixteen status effects.
 
 What remains is listed in §4 and §5: the five per-block effects, the progression
-systems, and a handful of numbers that are first-pass rather than designed.
+systems, and the unit stat values the vault has not written yet.
 
 ---
 
@@ -105,7 +107,7 @@ had to be thrown away once the design was read. Every row is now fixed.
 | 7 | Fall speed from enemy `base_speed` | Party `GRAV` stat, modified by Stars | Phase 2 |
 | 8 | Rotate `X`/`Z`, Hold `Shift` | Rotate `←/→` or `A/D`, Hold `Space` | Phase 0 |
 | 9 | No Round concept | Round = one completed drop; effects tick on it | Phase 1 |
-| 10 | Enemy = OpenRPG `Battler` | Units with `TYPE/TYPE2`, `POW/DEF/BAR/PSC/PSP/DOD` | Phase 2 |
+| 10 | Enemy = OpenRPG `Battler` | Units with `TYPE`, `OFF/DEF/TCHO/TCHD/PSC/PSP/DOD/ACC/SPD` | Phase 2 |
 | 11 | No status effects | 14 effects, most of which alter the board | Phase 4 (10 of 14) |
 | 12 | 7 fixed block colours | 7 blocks plus 19 Xenoblock forms | Phase 4 |
 
@@ -140,15 +142,25 @@ The parts that turned out to be right, and were kept rather than rebuilt:
 - [x] Introduce the **Round** concept: `round_finished(n)` after every drop.
 
 ### Phase 2 — units and attacks — **done**
-- [x] `UnitStats`: `NAME/LVL/TYPE/TYPE2/HP/POW/DEF/BAR/PSC/PSP/DOD`.
+- [x] `UnitStats`: `NAME/LVL/TYPE/HP/OFF/DEF/TCHO/TCHD/PSC/PSP/DOD/ACC/SPD`.
 - [x] `PartyStats`: `LVL/EXP/TP/LUCK/CRWN/GRAV/MOVE/ENCR` + Psionic Powers.
 - [x] Assign **Block Types to characters**; clearing routes to that character.
-- [x] Basic / Special / Special+50% / Rally Strike by line count.
+- [x] Basic / Advanced / Advanced+50% / Rally Strike by line count.
 - [x] **Union meter** (10 lines → Union Assault, +10% per line over).
 - [x] Delete combo / streak / back-to-back / perfect-clear rules.
 - [x] Gate enemy HP bars behind `HP Sight`.
-- [ ] Tune the damage formula — `attack_resolver.gd` is a first pass, since the
-      vault specifies which attack fires but not the maths.
+- [x] **The damage equation**, from the Damage Calculation note:
+      `Base x PerfectStrike x Randomizer x Type x Other`, flooring after each
+      step, with Base `(((2 x Level / 5) + 2) x Power x (Offense / Defense)) / 50 + 1`.
+- [x] **The five-type chart** (Arcane, Beast, Martial, Spirit, Xeno), including
+      Martial dealing nothing at all to Spirit.
+- [x] **Abilities are data**, with the Ability Properties columns: Name, Type,
+      Class, Level, Power, Targets, Effects. Power belongs to the ability, so a
+      Basic Attack of Power 10 means the same thing on every character.
+- [x] **Named characters.** Wilhelm (Soldier) and Olister (Archer) have the
+      abilities, Powers and Traits their notes give them; Rena (Cleric) is in the
+      roster but her note is still blank, so she fights on the fallbacks.
+- [ ] Rena's abilities, and the Techniques and Tech Points the vault now lists.
 
 ### Phase 3 — second board — **done**
 - [x] Two boards on screen: player left, enemy right, both seeded with junk.
@@ -162,18 +174,22 @@ The parts that turned out to be right, and were kept rather than rebuilt:
 - [ ] Enemy variety: every enemy currently uses a Basic Attack on a speed-derived
       timer. Real attack tables, Techniques and status application come with Phase 4.
 
-### Phase 4 — status effects and Xenoblocks — **framework done, 10 of 14 effects live**
+### Phase 4 — status effects and Xenoblocks — **framework done, 11 of 16 effects live**
 - [x] Effect framework with `-` / normal / `+` tiers, ticking once per Round.
 - [x] Compound effects: Renew cancels with Bleed and with Poison, clearing both.
 - [x] Shield (halves damage, consumed by stack), Renew, Poison, Bleed (on every
       rotation), Haste (spent per block generation, not per Round).
-- [x] Board effects carried by units: Shocked (no rotation), Confusion (preview
+- [x] Board effects carried by units: Shock (no rotation), Confusion (preview
       hidden), Blind (a third of the playfield fogged, chosen by team position).
-- [x] Enemies inflict effects on hit; Rally Strikes grant Shield.
+- [x] **Stun**, and clearing a line with a Stunned unit's block clearing it.
+- [x] Enemies inflict effects on hit. Rally Strikes carry what the vault gives
+      them: Wilhelm's Formation shields the team, Olister's Marked for Death
+      inflicts one of Blind, Poison or Bleed.
 - [x] Effects shown in both rosters, tinted by whether they help or hurt.
-- [ ] **Per-block effects** — Golden, Charged, Burning, Frozen, Thorned. All five
+- [ ] **Per-block effects** — Golden, Charged, Burn, Freeze, Thorns. All five
       need the board to store a *state per cell* alongside its colour, which is a
       change to `Grid` itself. That is the next meaningful chunk.
+- [ ] **Junkdrop**, which needs the board to accept a forced drop.
 - [x] **Xenoblock space and rotation.** Settled against SRS: wall kicks are a
       property of the bounding box and rotation centre, never of which cells are
       filled, so a Xenoblock needs no rotation code of its own. `scr/XenoBlocks.gd`
@@ -194,6 +210,63 @@ The parts that turned out to be right, and were kept rather than rebuilt:
 ### Phase 5 — meta systems
 Techniques/TP, Rally Strikes, Soul Gems, Trinkets, Constellations + Stars,
 Xenoshards, Psionic Powers, Field Actions, Campfires, Basecamp, Menus.
+
+---
+
+## 4b. What the vault added since the last pass, and what it cost
+
+The vault grew from 27 notes to 37 and rewrote several of the ones already built
+against. The mechanical changes:
+
+- **The damage equation exists now.** It was the one thing marked placeholder in
+  the code, and it is implemented verbatim, floors and all.
+- **The type chart exists**, and it has teeth. Martial does **x0.5** to Xeno and
+  takes **x2** from it, and does **nothing at all** to Spirit.
+- **"Special Attack" is now "Advanced Attack"** throughout.
+- **Block Types have in-fiction names**: Square (O), Tower (I), Bridge (T),
+  Right Lance (L), Left Lance (J), Right Bolt (S), Left Bolt (Z). Which Lance is
+  which was read off the shape images, not guessed.
+- **Speed changed meaning.** It is no longer a turn-order stat: it is "the chance
+  for a given unit's Block Type to appear". The enemy cast timer that used to be
+  derived from it is now openly a placeholder, because the vault gives enemies
+  cast bars but no cast-time stat.
+- **Stun and Junkdrop** are new; Poison, Bleed, Shield and Thorns changed
+  durations; Burn, Freeze, Thorns and Shock were renamed.
+- **Junk at the start of combat "should never exceed the fifth line."**
+
+### Two findings worth a design decision
+
+**The opening party is structurally the worst answer to the enemy.** Wilhelm and
+Olister are both Martial, every one of their abilities is Martial, and the
+invaders are Xeno. That is x0.5 out and x2 in — a fourfold swing against the
+player, in the encounter the game opens with. Simulated over 300 battles on the
+legacy stat values, the party lost about 80% of them. It reads as deliberate (the
+premise is that conventional warfare does not work on aliens, and the Characters
+note says the B prestige paths are "more alien influenced"), and Spirit and Beast
+are the two types that hit Xeno for x2 — which would make Rena the Cleric the
+answer, if her note were filled in. Flagging it because the first fight in the
+game currently has the worst matchup in the chart.
+
+**The vault gives no stat values for any unit.** It gives the equation and every
+ability's Power, but no HP, Offense or Defense for anyone — and the equation is
+very sensitive to the ratio of Offense to Defense, with the type multiplier
+applied *after* the value has been floored. Left level with each other, every
+attack in the game rounds to 1: Basic, Advanced and Rally all land for the same
+damage, which reads as the clears not mattering. So the legacy OpenRPG battler
+numbers are mapped onto the design's scale by three constants in
+`TetrisBattleConfig`, tuned by simulating 300 battles until an encounter was
+winnable and the clears were worth telling apart:
+
+| Attack | Power | Average vs. a Xeno Drone |
+|---|---|---|
+| Basic Attack (Slice) | 10 | 1.7 |
+| Advanced Attack (Shield Bash) | 20 | 3.5 |
+| Advanced Attack +50% | 20 | 5.1 |
+| Rally Strike (Formation) | 15 | 2.7 per ally |
+| Enemy Basic Attack vs. a Martial ally | 10 | 4.1 |
+
+Those three constants are the first thing to delete once the vault writes unit
+stats.
 
 ---
 

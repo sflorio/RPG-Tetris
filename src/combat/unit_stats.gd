@@ -1,30 +1,44 @@
 ## The stats shared by every unit, ally or enemy, as defined in the design's Unit Stats note.
+##
+## A unit has one Type, which the attacker's Type is weighed against on the design's chart (see
+## [TypeChart]). Offence and defence come in two halves: an ability's Class decides whether it uses
+## Offense against Defense, or Tech Offense against Tech Defense.
 class_name UnitStats extends Resource
 
-## Damage types. The first three are physical and mitigated by Defense; the rest are non-physical
-## and mitigated by Barrier.
+## The five damage types from the design's type chart.
 enum Type {
 	NONE,
-	SLASH, PIERCE, CRUSH,
-	ELEMENTAL, NATURE, XENO, VOID, DIVINE,
+	ARCANE,   ## Anything magical.
+	BEAST,    ## Anything with monster origins.
+	MARTIAL,  ## Anything standard warfare.
+	SPIRIT,   ## Anything otherworldly: ghosts, hexes.
+	XENO,     ## Anything with alien origins.
 }
 
-## Types mitigated by Defense rather than Barrier.
-const PHYSICAL_TYPES: Array[Type] = [Type.SLASH, Type.PIERCE, Type.CRUSH]
+## Whether an ability measures itself against Defense or against Tech Defense.
+enum DamageClass { PHYSICAL, TECHNICAL }
+
+const TYPE_NAMES: = {
+	Type.NONE: "None", Type.ARCANE: "Arcane", Type.BEAST: "Beast",
+	Type.MARTIAL: "Martial", Type.SPIRIT: "Spirit", Type.XENO: "Xeno",
+}
 
 @export var display_name: = "Unit"
 
 ## For allies this mirrors the Party Level.
 @export var level: = 1
 
-## Every unit must have at least one Type. Type 2 is optional and weighed equally.
 @export var type: Type = Type.NONE
-@export var type_2: Type = Type.NONE
 
 @export var max_hp: = 100
-@export var power: = 10
+
+## Physical strength and resistance.
+@export var offense: = 10
 @export var defense: = 5
-@export var barrier: = 5
+
+## Non-physical strength and resistance.
+@export var tech_offense: = 10
+@export var tech_defense: = 5
 
 ## Chance for damage or healing to be a Perfect Strike, as a percentage. 1% by default.
 @export var perfect_strike_chance: = 1.0
@@ -35,12 +49,23 @@ const PHYSICAL_TYPES: Array[Type] = [Type.SLASH, Type.PIERCE, Type.CRUSH]
 ## Chance to avoid a source of damage, as a percentage. 1% by default.
 @export var dodge: = 1.0
 
+## Chance to hit, as a percentage. 100% by default.
+@export var accuracy: = 100.0
 
-## True when this unit's primary type is mitigated by Defense rather than Barrier.
-func is_physical() -> bool:
-	return type in PHYSICAL_TYPES
+## How likely this unit's Block Type is to come up next. 1 by default; the design makes Speed a
+## weighting on block generation rather than a turn order.
+@export var speed: = 1
 
 
-## The mitigation this unit applies against an incoming attack of `attack_type`.
-func get_mitigation(attack_type: Type) -> int:
-	return defense if attack_type in PHYSICAL_TYPES else barrier
+static func get_type_name(unit_type: Type) -> String:
+	return TYPE_NAMES.get(unit_type, "None")
+
+
+## The offence this unit brings to an ability of `damage_class`.
+func get_offense(damage_class: DamageClass) -> int:
+	return offense if damage_class == DamageClass.PHYSICAL else tech_offense
+
+
+## The resistance this unit applies against an ability of `damage_class`.
+func get_defense(damage_class: DamageClass) -> int:
+	return defense if damage_class == DamageClass.PHYSICAL else tech_defense
