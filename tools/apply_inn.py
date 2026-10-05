@@ -62,7 +62,7 @@ EXAMINABLES = [
     ("Kitchen", "KitchenPot", (38, 2), "kitchen_pot"),
     (HALL, "HallBoard", (45, 10), "hall_board"),
     (HALL, "HallHearth", (50, 10), "hall_hearth"),
-    (HALL, "HallTap", (38, 10), "hall_tap"),
+    (HALL, "HallTap", (41, 10), "hall_tap"),
     (HALL, "HallWindow", (50, 15), "hall_window"),
 ]
 

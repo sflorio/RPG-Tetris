@@ -36,6 +36,9 @@ SPAWNS = {
     "medic": (48, 12),
 }
 
+# Nothing may be placed on a doorway or on the floor cell in front of one, or the room it leads to
+# becomes unreachable. tools/check_maps.py asserts that.
+
 # Doorways cut through a room's wall, as (room, cell). The cell is a wall cell that becomes floor.
 DOORWAYS = [
     ("StorageAttic", (62, 6)),
@@ -52,10 +55,10 @@ PROPS = {
     ],
     "Kitchen": [
         ((38, 2), "cauldron"), ((39, 2), "table"), ((40, 2), "workbench"),
-        ((44, 2), "barrel"), ((44, 5), "crate"), ((38, 5), "pot"),
+        ((44, 2), "barrel"), ((44, 5), "crate"), ((42, 5), "pot"),
     ],
     "MainHall": [
-        ((38, 10), "barrel"), ((39, 10), "barrel_open"), ((40, 10), "tub"),
+        ((41, 10), "barrel"), ((39, 10), "barrel_open"), ((40, 10), "tub"),
         ((45, 10), "bookshelf"), ((46, 10), "locker"),
         ((39, 12), "table"), ((41, 12), "table"), ((43, 15), "table"), ((46, 15), "table"),
         ((50, 10), "brazier_lit"), ((50, 15), "brazier_lit"),

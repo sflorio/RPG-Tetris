@@ -26,7 +26,10 @@ GAMEBOARD = [
 
 # The Emberlight Inn has no legacy map behind it, so it is reported rather than compared.
 import build_inn
+import apply_inn
 NEW_MAPS = build_inn.layer_paths()
+
+NEIGHBOURS = ((0, 1), (0, -1), (1, 0), (-1, 0))
 
 
 def walkable(layers, blocked_at, paths=None):
@@ -37,6 +40,59 @@ def walkable(layers, blocked_at, paths=None):
             if blocked_at(src, ax, ay):
                 blocked.add((x, y))
     return exists - blocked, exists
+
+
+def check_inn(walkable_cells):
+    """The inn has to be walkable end to end, which is easy to break by putting a barrel down.
+
+    A prop on the cell in front of a doorway, or on the cell a doorway lands you in, seals a room
+    off: the door is still there, you simply cannot reach it. That shipped once -- a jar in the
+    kitchen cut the main hall off from the rest of the inn -- so it is asserted rather than
+    eyeballed. Reachability is checked for real, by flooding from where the player wakes up.
+    """
+    problems = []
+
+    for _room, name, cell, arrival in apply_inn.TRANSITIONS:
+        if cell not in walkable_cells:
+            problems.append("%s: the doorway at %s is blocked" % (name, cell))
+        if arrival not in walkable_cells:
+            problems.append("%s: it lands you on %s, which is blocked" % (name, arrival))
+        approach = [n for n in _around(cell) if n in walkable_cells]
+        if not approach:
+            problems.append("%s: nothing walkable next to the doorway at %s" % (name, cell))
+
+    for who, cell in build_inn.SPAWNS.items():
+        if cell not in walkable_cells:
+            problems.append("%s stands on %s, which is blocked" % (who, cell))
+
+    # Doorways are one-way teleports, so flooding has to step through them.
+    links = {}
+    for _room, _name, cell, arrival in apply_inn.TRANSITIONS:
+        links.setdefault(cell, []).append(arrival)
+
+    start = build_inn.SPAWNS["player"]
+    seen, queue = {start}, [start]
+    while queue:
+        cell = queue.pop()
+        for nxt in list(_around(cell)) + links.get(cell, []):
+            if nxt in walkable_cells and nxt not in seen:
+                seen.add(nxt)
+                queue.append(nxt)
+
+    stranded = walkable_cells - seen
+    if stranded:
+        problems.append("%d cells cannot be reached from where the player wakes up, e.g. %s"
+                        % (len(stranded), sorted(stranded)[:8]))
+
+    for who, cell in build_inn.SPAWNS.items():
+        if cell in walkable_cells and cell not in seen:
+            problems.append("%s cannot be reached" % who)
+
+    return problems
+
+
+def _around(cell):
+    return [(cell[0] + dx, cell[1] + dy) for dx, dy in NEIGHBOURS]
 
 
 def main():
@@ -61,6 +117,12 @@ def main():
                    lambda src, ax, ay: bt.blocked(ax, ay),
                    paths=NEW_MAPS)
     print("new       Inn: %d walkable of %d tiled" % (len(inn[0]), len(inn[1])))
+
+    problems = check_inn(inn[0])
+    for problem in problems:
+        print("   Inn: " + problem)
+    if problems:
+        ok = False
 
     print("OK" if ok else "MISMATCH")
     return 0 if ok else 1

@@ -577,7 +577,7 @@ script = ExtResource("55_a8sfs")
 
 
 [node name="Decoration" type="TileMapLayer" parent="Field/Map/Inn/Kitchen"]
-tile_map_data = PackedByteArray("AAAmAAIAAAAeAAsAAAAnAAIAAAAhAAoAAAAoAAIAAAAkAAoAAAAsAAIAAAAmAAkAAAAmAAUAAAAkAAsAAAAsAAUAAAAcAAQAAAA=")
+tile_map_data = PackedByteArray("AAAmAAIAAAAeAAsAAAAnAAIAAAAhAAoAAAAoAAIAAAAkAAoAAAAsAAIAAAAmAAkAAAAqAAUAAAAkAAsAAAAsAAUAAAAcAAQAAAA=")
 tile_set = ExtResource("7_po5fq")
 script = ExtResource("55_a8sfs")
 
@@ -603,7 +603,7 @@ script = ExtResource("55_a8sfs")
 
 
 [node name="Decoration" type="TileMapLayer" parent="Field/Map/Inn/MainHall"]
-tile_map_data = PackedByteArray("AAAmAAoAAAAmAAkAAAAnAAoAAAAnAAkAAAAoAAoAAAAoAAkAAAAtAAoAAAAeAAoAAAAuAAoAAAAcAAoAAAAyAAoAAAAcAAsAAAAnAAwAAAAhAAoAAAApAAwAAAAhAAoAAAArAA8AAAAhAAoAAAAuAA8AAAAhAAoAAAAwAA8AAAAfAAkAAAAyAA8AAAAcAAsAAAA=")
+tile_map_data = PackedByteArray("AAAnAAoAAAAnAAkAAAAoAAoAAAAoAAkAAAApAAoAAAAmAAkAAAAtAAoAAAAeAAoAAAAuAAoAAAAcAAoAAAAyAAoAAAAcAAsAAAAnAAwAAAAhAAoAAAApAAwAAAAhAAoAAAArAA8AAAAhAAoAAAAuAA8AAAAhAAoAAAAwAA8AAAAfAAkAAAAyAA8AAAAcAAsAAAA=")
 tile_set = ExtResource("7_po5fq")
 script = ExtResource("55_a8sfs")
 
@@ -709,7 +709,7 @@ emote = 2
 
 
 [node name="HallTap" parent="Field/Map/Inn/MainHall/Gamepieces" instance=ExtResource("19_sa6jd")]
-position = Vector2(924, 252)
+position = Vector2(996, 252)
 script = ExtResource("14_b3y71")
 timeline = ExtResource("inn_ex_hall_tap")
 
