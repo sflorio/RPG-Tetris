@@ -311,6 +311,14 @@ kitchen and the hall were visible at once, and the attic had the inside of a hou
 `map.gd` now draws only the area the player is standing in. Hiding does not touch the pathfinder:
 `GameboardLayer` registers its cells on entering the tree, not on becoming visible.
 
+That area is chosen by polling the player's cell each frame rather than by listening for a signal.
+The first attempt hooked `Gamepiece.arrived`, which an `AreaTransition` never emits -- it sets the
+gamepiece's position directly -- so every room after the first stayed hidden and the player was
+left standing on invisible floor in an empty grey field. Polling costs one cell comparison a frame
+and catches teleports, transitions and cutscene moves alike. Each area's cells are cached, because
+`TileMapLayer.get_used_cells()` allocates an array per call and the player crosses a cell every few
+frames.
+
 The dialogue box also needed fixing. No timeline in the demo had ever had a choice in it, so the
 choice buttons were laid out inside the text box and drew straight over the line being spoken.
 

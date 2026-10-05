@@ -40,25 +40,43 @@ func _ready() -> void:
 
 # --- Showing one area at a time -----------------------------------------------------------------
 
+# Which area was showing last, and the cell that chose it. Cached so the check only runs when the
+# player actually moves between cells.
+var _visible_area: Node2D = null
+var _last_cell: = Vector2i(-9999, -9999)
+
+# Which cells belong to which area, built once. The player crosses a cell every few frames and
+# TileMapLayer.get_used_cells() allocates an array each call, so looking it up fresh every time is
+# an allocation per layer per step.
+var _area_cells: Dictionary = {}
+
+
 func _track_player_area() -> void:
 	if exclusive_areas.is_empty():
+		set_process(false)
 		return
-
-	Player.gamepiece_changed.connect(_follow_player)
-	_follow_player()
-
-
-func _follow_player() -> void:
-	if Player.gamepiece == null:
-		return
-	if not Player.gamepiece.arrived.is_connected(_update_visible_area):
-		Player.gamepiece.arrived.connect(_update_visible_area)
 	_update_visible_area()
 
 
-func _update_visible_area() -> void:
-	var cell: = Gameboard.pixel_to_cell(Player.gamepiece.position)
+# The player's cell is polled rather than taken from a signal. An [AreaTransition] sets the
+# gamepiece's position directly and never emits `arrived`, so hooking that signal left the
+# destination room hidden and the player standing in an empty grey field; and a cutscene can move
+# them too. Polling catches every case for the cost of one cell comparison a frame.
+func _process(_delta: float) -> void:
+	if Engine.is_editor_hint() or Player.gamepiece == null:
+		return
 
+	var cell: = Gameboard.pixel_to_cell(Player.gamepiece.position)
+	if cell != _last_cell:
+		_last_cell = cell
+		_update_visible_area()
+
+
+func _update_visible_area() -> void:
+	if Player.gamepiece == null:
+		return
+
+	var cell: = Gameboard.pixel_to_cell(Player.gamepiece.position)
 	var occupied: Node2D = null
 	for path in exclusive_areas:
 		var area: = get_node_or_null(path) as Node2D
@@ -66,7 +84,12 @@ func _update_visible_area() -> void:
 			occupied = area
 			break
 
-	# Until the player is standing somewhere known, show everything rather than a blank screen.
+	# A cell that belongs to no area is a gap between rooms, or a frame mid-transition. Keep showing
+	# whatever was showing rather than blinking the whole map on.
+	if occupied == null:
+		occupied = _visible_area
+	_visible_area = occupied
+
 	for path in exclusive_areas:
 		var area: = get_node_or_null(path) as Node2D
 		if area:
@@ -74,7 +97,10 @@ func _update_visible_area() -> void:
 
 
 func _area_contains(area: Node2D, cell: Vector2i) -> bool:
-	for layer: TileMapLayer in area.find_children("*", "TileMapLayer"):
-		if cell in layer.get_used_cells():
-			return true
-	return false
+	if not _area_cells.has(area):
+		var cells: = {}
+		for layer: TileMapLayer in area.find_children("*", "TileMapLayer"):
+			for used: Vector2i in layer.get_used_cells():
+				cells[used] = true
+		_area_cells[area] = cells
+	return _area_cells[area].has(cell)
