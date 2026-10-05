@@ -26,6 +26,10 @@ signal interaction_selected(interaction: Interaction)
 @warning_ignore("unused_signal")
 signal combat_triggered(arena: PackedScene)
 
+## Emitted when Chapter 1 of the Opening ends, which is the explosion that interrupts Quinn.
+@warning_ignore("unused_signal")
+signal chapter1_finished
+
 ## Emitted when a [Cutscene] begins, signalling that the player should yield control of their
 ## character to the cutscene code.
 @warning_ignore("unused_signal")

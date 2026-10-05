@@ -15,6 +15,7 @@ Run in this order. Each step is idempotent.
 ```bash
 python tools/make_world_atlas.py   # Oryx sheet + house kit -> assets/tiles/oryx_world.png
 python tools/build_tileset.py      # -> overworld/maps/tilesets/oryx_world.tres
+python tools/apply_inn.py          # the Emberlight Inn's nodes (only after changing its layout)
 python tools/apply_maps.py         # rebuild the maps and write src/main.tscn
 python tools/check_maps.py         # assert the gameboard did not change
 ```
@@ -40,6 +41,9 @@ python tools/render_map.py old     # the same maps before the retile, for compar
 | `render_oryx.py`, `render_map.py` | offline previews |
 | `tilemap_io.py`, `tileset_io.py` | read and write Godot's `tile_map_data` and `.tres` tile entries |
 | `make_cursor.py` | draws the 24px field cursor |
+| `build_inn.py` | lays out the Emberlight Inn's three rooms, where the Opening starts |
+| `apply_inn.py` | writes the inn's rooms, cast and doorways into `src/main.tscn` |
+| `fetch_design_vault.py` | snapshots the published design vault into `design/` |
 
 ## legacy_maps.json
 

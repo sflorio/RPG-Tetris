@@ -1,0 +1,15 @@
+if {WarriorTalked} == 1:
+	warrior: "Keep 'em coming!"
+	[end_timeline]
+warrior: "Hmm, he did get the one running for help, but I got the two in the cart..."
+- (It sounds like you guys got them all.)
+	{PlayerName}: "It sounds like you guys got them all. You all must be very good."
+	warrior: "That is true. There's wasn't a gobbo left standing in the end."
+- (Read Thoughts)
+	warrior: [i]...but did I get more than them? I did get that one behind the tree...[/i]
+	{PlayerName}: "Two in a cart and that's nothing? Surely you got the most then. I doubt they could hide anywhere!"
+	warrior: "Hah, I can't fault that logic. Now that I think about it, I saw that dork fall into the ditch!"
+	[signal arg="crowns_5"]
+set {WarriorTalked} = 1
+set {PatronsTalked} += 1
+[end_timeline]

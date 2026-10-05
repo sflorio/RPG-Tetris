@@ -1,0 +1,12 @@
+quinn: "Well look who decided to grace me with the assistance I pay them for."
+- (Sorry, sir.)
+	{PlayerName}: "Sorry, sir. Bringing the ale casks downstairs must have worn me out."
+	quinn: "There's always an excuse with you. What do those even weigh? Two bags of corn each?"
+- (Whatever.)
+	{PlayerName}: "Whatever. You try working as hard as I do without the occasional nap."
+	quinn: "You? Working hard? Is that the joke of the day? Because it's the funniest thing I've heard all morning."
+quinn: "Anyway, we've got a full house out there. Some group of mercs is celebrating something."
+quinn: "Don't know, don't care. Just go fill their cups, take their coin and mind yourself."
+{PlayerName}: "Will do."
+set {Chapter1Stage} = 2
+[end_timeline]

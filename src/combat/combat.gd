@@ -68,7 +68,7 @@ func _setup_tetris_combat(arena: PackedScene) -> void:
 	_ui.hide()
 
 	var battle: = TetrisBattle.new()
-	battle.config = TetrisBattleConfig.from_arena(arena)
+	battle.config = TetrisBattleConfig.from_arena(arena, Party.stats)
 	add_child(battle)
 
 	# Silence the field music; the Tetris scene plays its own track.

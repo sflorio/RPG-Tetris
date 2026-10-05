@@ -75,6 +75,7 @@ status effects, Xenoblocks, and the files to edit for each.
 | Area | State |
 |---|---|
 | Overworld, maps, dialogue, encounters, saving | from OpenRPG, working |
+| The Opening, Chapter 1: character creator, the Emberlight Inn, Quinn and the three patrons | done |
 | Town, House and Forest retiled on Oryx world tiles | done |
 | Two boards, 10×40, Rounds | done |
 | Character attacks, Rally Strikes, Union meter | done |

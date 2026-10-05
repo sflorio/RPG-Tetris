@@ -232,6 +232,11 @@ def build(painter, old):
     out["Field/Map/Forest/Treetops"] = []
 
     out.update(house(painter, old))
+
+    # The Emberlight Inn, where the design's Opening starts. It has no legacy map behind it, so it
+    # is authored rather than translated; see tools/build_inn.py.
+    import build_inn
+    out.update(build_inn.build(painter))
     return out
 
 

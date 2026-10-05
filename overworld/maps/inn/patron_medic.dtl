@@ -1,0 +1,15 @@
+if {MedicTalked} == 1:
+	medic: "Go with luck and open eyes!"
+	[end_timeline]
+medic: "Oh, hello. Odd question, but you don't see anyone in our group that looks hurt, do you?"
+- (Not that I see.)
+	{PlayerName}: "Not that I see. To be honest, I think they might be too drunk to show any pain."
+	medic: "That is a very fair point. I suppose it'll be a long morning."
+- (Read Thoughts)
+	medic: [i]I can't believe I couldn't save the archer. That damn fool...[/i]
+	{PlayerName}: "Everyone here looks to be in good health. You must be a good healer to keep up with them."
+	medic: "Thank you. I... needed to hear that. Please, take this and stay safe out there."
+	[signal arg="potion"]
+set {MedicTalked} = 1
+set {PatronsTalked} += 1
+[end_timeline]

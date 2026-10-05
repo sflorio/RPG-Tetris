@@ -1,0 +1,13 @@
+quinn: "WHAT IN ALL THE HELLS WAS THAT!?"
+captain: "Sober up, soldiers. Celebrations may be delayed. Let's go see what that was."
+[signal arg="mercs_leave"]
+quinn: "Well don't just stand here, go see what that was."
+- (What? Why me?)
+	{PlayerName}: "What? Why me? The mercs are already on it."
+	quinn: "Yeah, and they could be gone for awhile or, here's a thought, NOT COMING BACK. They racked up a huge tab and had a good excuse to bail on it, so go make sure they didn't leave."
+- (You go see what it was!)
+	{PlayerName}: "You go see what it was! I'm right behind you."
+	quinn: "Oh, I didn't realize our relationship was me doing what you tell me to and getting paid for it. Now go see what it was before I find a new barhand."
+quinn: "And grab the towels on the way back! There's beer all over the floor."
+set {Chapter2Stage} = 1
+[end_timeline]

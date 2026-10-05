@@ -1,0 +1,15 @@
+if {CaptainTalked} == 1:
+	captain: "You're alright, kid!"
+	[end_timeline]
+captain: "Barhand! We're celebrating a strong victory over some thieving goblins!"
+- (A win well earned, I'm sure.)
+	{PlayerName}: "A win well earned, I'm sure. Congratulations to you and your band."
+	captain: "Aye, it was a hell of a fight!"
+- (Read Thoughts)
+	captain: [i]This beer is fantastic! I shouldn't have any more, but it's so good...[/i]
+	{PlayerName}: "You know, another round for your band would really seal the deal."
+	captain: "The kid's right! Another round for all you shaggy dogs!"
+	[signal arg="crowns_5"]
+set {CaptainTalked} = 1
+set {PatronsTalked} += 1
+[end_timeline]

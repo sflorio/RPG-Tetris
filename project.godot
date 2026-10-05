@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Camera="*res://src/field/field_camera.gd"
+Party="*res://src/common/party.gd"
 CombatEvents="*res://src/combat/combat_events.gd"
 FieldEvents="*res://src/field/field_events.gd"
 Gameboard="*res://src/field/gameboard/gameboard.gd"
@@ -55,16 +56,23 @@ glossary/default_case_sensitive=true
 layout/mode=2
 variables={
 "BlueWandCount": 0,
+"CaptainTalked": 0,
+"Chapter1Stage": 0,
+"Chapter2Stage": 0,
 "GreenWandCount": 0,
 "HasMonkToken": 0,
 "HasThiefToken": 0,
 "HasWarriorToken": 0,
 "HasWizardToken": 0,
 "Hint": 0,
+"MedicTalked": 0,
+"PatronsTalked": 0,
+"PlayerName": "Psion",
 "RedWandCount": 0,
 "StrangeTreeExamined": 0,
 "TokenCount": 0,
-"TokenQuestStatus": 0
+"TokenQuestStatus": 0,
+"WarriorTalked": 0
 }
 layout/end_behaviour=0
 layout/styles={
@@ -81,10 +89,14 @@ animations/leave_default="Instant Out"
 text/autocolor_names=true
 settings/text_speed=1.0
 directories/dch_directory={
+"captain": "res://overworld/maps/inn/captain.dch",
 "enemy_ghost": "res://overworld/maps/town/enemy_ghost.dch",
 "fan_of_four": "res://overworld/maps/town/fan_of_four.dch",
 "ghost": "res://overworld/maps/forest/ghost.dch",
+"inn/warrior": "res://overworld/maps/inn/warrior.dch",
+"medic": "res://overworld/maps/inn/medic.dch",
 "monk": "res://overworld/maps/town/monk.dch",
+"quinn": "res://overworld/maps/inn/quinn.dch",
 "runner": "res://overworld/maps/town/runner.dch",
 "smith": "res://overworld/maps/town/smith.dch",
 "thief": "res://overworld/maps/town/thief.dch",
@@ -92,13 +104,28 @@ directories/dch_directory={
 "wizard": "res://overworld/maps/town/wizard.dch"
 }
 directories/dtl_directory={
+"chapter1_opening": "res://overworld/maps/inn/chapter1_opening.dtl",
+"chapter2_boom": "res://overworld/maps/inn/chapter2_boom.dtl",
 "encounter_before_combat": "res://overworld/maps/town/encounter_before_combat.dtl",
 "encounter_on_loss": "res://overworld/maps/town/encounter_on_loss.dtl",
 "encounter_on_victory": "res://overworld/maps/town/encounter_on_victory.dtl",
+"examine_attic_casks": "res://overworld/maps/inn/examine_attic_casks.dtl",
+"examine_attic_sacks": "res://overworld/maps/inn/examine_attic_sacks.dtl",
+"examine_hall_board": "res://overworld/maps/inn/examine_hall_board.dtl",
+"examine_hall_hearth": "res://overworld/maps/inn/examine_hall_hearth.dtl",
+"examine_hall_tap": "res://overworld/maps/inn/examine_hall_tap.dtl",
+"examine_hall_window": "res://overworld/maps/inn/examine_hall_window.dtl",
+"examine_kitchen_pot": "res://overworld/maps/inn/examine_kitchen_pot.dtl",
 "fan_of_four": "res://overworld/maps/town/fan_of_four.dtl",
 "ghost": "res://overworld/maps/forest/ghost.dtl",
 "monk": "res://overworld/maps/town/monk.dtl",
 "opening_cutscene": "res://overworld/maps/opening_cutscene.dtl",
+"patron_captain": "res://overworld/maps/inn/patron_captain.dtl",
+"patron_medic": "res://overworld/maps/inn/patron_medic.dtl",
+"patron_warrior": "res://overworld/maps/inn/patron_warrior.dtl",
+"quinn_end": "res://overworld/maps/inn/quinn_end.dtl",
+"quinn_intro": "res://overworld/maps/inn/quinn_intro.dtl",
+"quinn_waiting": "res://overworld/maps/inn/quinn_waiting.dtl",
 "runner": "res://overworld/maps/town/runner.dtl",
 "sign": "res://overworld/maps/town/sign.dtl",
 "smith": "res://overworld/maps/town/smith.dtl",

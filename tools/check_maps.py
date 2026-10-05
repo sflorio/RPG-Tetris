@@ -24,10 +24,14 @@ GAMEBOARD = [
     "Field/Map/Forest/Terrain", "Field/Map/Forest/Trees",
 ]
 
+# The Emberlight Inn has no legacy map behind it, so it is reported rather than compared.
+import build_inn
+NEW_MAPS = build_inn.layer_paths()
 
-def walkable(layers, blocked_at):
+
+def walkable(layers, blocked_at, paths=None):
     exists, blocked = set(), set()
-    for path in GAMEBOARD:
+    for path in (paths if paths is not None else GAMEBOARD):
         for x, y, src, ax, ay, _alt in layers.get(path, []):
             exists.add((x, y))
             if blocked_at(src, ax, ay):
@@ -52,6 +56,12 @@ def main():
             ok = False
             print("   lost:   ", sorted(lost)[:12])
             print("   gained: ", sorted(gained)[:12])
+    inn = walkable({p: c for p, c in bm.build(bm.Painter(), bm.legacy_layers()).items()
+                    if p in NEW_MAPS},
+                   lambda src, ax, ay: bt.blocked(ax, ay),
+                   paths=NEW_MAPS)
+    print("new       Inn: %d walkable of %d tiled" % (len(inn[0]), len(inn[1])))
+
     print("OK" if ok else "MISMATCH")
     return 0 if ok else 1
 

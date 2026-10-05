@@ -270,6 +270,52 @@ stats.
 
 ---
 
+## 4c. The Opening
+
+The vault's Opening note went from a sketch to a written script -- two chapters of dialogue, a cast
+and a location. Chapter 1 is built and playable end to end; Chapter 2 is built as far as the line
+that interrupts it.
+
+### What is in
+
+- **The character creator.** Name entry only, as the note specifies for the demo. The name goes to
+  the `Party` autoload, which mirrors it into the Dialogic variable every timeline reads as
+  `{PlayerName}` -- that is what replaces each PLAYER in the script.
+- **The Emberlight Inn**, three rooms: the Storage Attic the player wakes in, the Kitchen below and
+  the Main Hall. Authored by `tools/build_inn.py` on the Oryx tiles and written into the scene by
+  `tools/apply_inn.py`, so the cast is a table of cells rather than hand-edited scene text.
+- **Chapter 1, verbatim.** The wake-up over a black screen, Quinn sending the player to work, the
+  Captain, the Warrior and the Medic, and Quinn's closing conversation. Every branch the note
+  writes is there, including the lines for talking to a patron twice.
+- **Read Thoughts.** Each patron offers a plain reply and a `(Read Thoughts)` reply. Only the second
+  is rewarded -- 5 Crowns, 5 Crowns and a Potion -- which is the first thing the game teaches about
+  being a psion.
+- **Crowns**, as a party stat that persists outside combat, and **Potion** as an item.
+- **The seven examinable objects**, at the counts the note gives: two in the attic, one in the
+  kitchen, four in the hall. The note gives no text for them, so theirs describes what is there
+  rather than inventing story.
+- **Chapter 2's opening beat**: the boom, the building shaking, and Quinn sending the player
+  outside.
+
+### What is not
+
+Chapter 2 past that line needs systems that do not exist yet, so it is not started: the invaded
+state of Valestead, three combat tutorials, recruiting Wilhelm, Olister and Rena, the Field Action
+*Slice*, Trinkets, Soul Gems and the Alien Orb vision. Rena's own note is still blank besides.
+
+### One thing it changed elsewhere
+
+Every map in this game lives in one scene, laid out side by side across the gameboard. That was
+survivable while the maps were far apart; with the inn's three rooms added it was not -- the
+kitchen and the hall were visible at once, and the attic had the inside of a house next to it. So
+`map.gd` now draws only the area the player is standing in. Hiding does not touch the pathfinder:
+`GameboardLayer` registers its cells on entering the tree, not on becoming visible.
+
+The dialogue box also needed fixing. No timeline in the demo had ever had a choice in it, so the
+choice buttons were laid out inside the text box and drew straight over the line being spoken.
+
+---
+
 ## 5. Open questions
 
 1. ~~**Does the enemy board actually play Tetris?**~~ **Resolved: scripted.** The

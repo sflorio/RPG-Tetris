@@ -1,0 +1,9 @@
+[background arg="" fade="0.0"]
+????: "{PlayerName}!"
+{PlayerName}: "Zzz..."
+[signal arg="wake_up"]
+????: "{PlayerName}! Get down here and help me!"
+{PlayerName}: "Hngh? ...uh oh, I fell asleep up here. Again."
+{PlayerName}: "I should go see what the old man wants before he loses it."
+set {Chapter1Stage} = 1
+[end_timeline]

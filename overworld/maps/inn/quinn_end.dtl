@@ -1,0 +1,12 @@
+{PlayerName}: "How long have they been here? Most of them are hammered."
+quinn: "Quite awhile, hence my fantastic mood with you."
+- (You should have come to get me sooner!)
+	{PlayerName}: "You should have come to get me sooner! That nap was accidental, not intentional."
+	quinn: "Oh, did you think that was the first time I'd called for you? I couldn't exactly search the place for you with a HALL FULL OF MERCENARIES."
+- (So you had it handled and interrupted my nap because...?)
+	{PlayerName}: "So you had it handled and interrupted my nap because...? If I'm sleeping I obviously need the rest."
+	quinn: "I interrupted your UNPAID NAP because I needed you for the job I DO pay you for. Some days, you're lucky I pay you at all."
+quinn: "Look, keep yourself down here and on top of empty cups. It's MY turn to head upstairs and get some-"
+set {Chapter1Stage} = 3
+[signal arg="chapter1_end"]
+[end_timeline]

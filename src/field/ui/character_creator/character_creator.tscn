@@ -1,0 +1,64 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/field/ui/character_creator/character_creator.gd" id="1_cc"]
+[ext_resource type="FontFile" path="res://assets/gui/font/Kenney Pixel.ttf" id="2_cc"]
+
+[node name="CharacterCreator" type="CanvasLayer"]
+layer = 64
+script = ExtResource("1_cc")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.043, 0.047, 0.078, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Column" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 36
+
+[node name="Title" type="Label" parent="Center/Column"]
+layout_mode = 2
+text = "What is your name?"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("2_cc")
+theme_override_font_sizes/font_size = 96
+theme_override_colors/font_color = Color(0.89, 0.91, 0.95, 1)
+
+[node name="NameField" type="LineEdit" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(760, 110)
+layout_mode = 2
+alignment = 1
+placeholder_text = "Psion"
+theme_override_fonts/font = ExtResource("2_cc")
+theme_override_font_sizes/font_size = 72
+
+[node name="Confirm" type="Button" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Begin"
+theme_override_fonts/font = ExtResource("2_cc")
+theme_override_font_sizes/font_size = 64
+
+[node name="Hint" type="Label" parent="Center/Column"]
+layout_mode = 2
+text = "Leave it blank and you will be called Psion."
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("2_cc")
+theme_override_font_sizes/font_size = 44
+theme_override_colors/font_color = Color(0.55, 0.6, 0.68, 1)
+
+[node name="Fade" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)

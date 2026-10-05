@@ -22,6 +22,7 @@ Notes:
 - Refugee camps are common with towns having been mostly invaded
 - Uneasy alliances are rising due to an overwhelming common enemy
 	- At least one character comes from another country to help
+	- "You think that all is forgotten in the face of a new enemy?"
 - The world still fears psions (create an event in history to justify)
 - King's castle destroyed, they survived by being away but the royal family and most of the guard are gone
 - Aliens are taking people and liquifying them into Ego Canisters that they use to quickly learn new skills, player unknowingly consumes a few of them to gain Mastery Points (Tomes)
