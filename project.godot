@@ -75,13 +75,6 @@ variables={
 "WarriorTalked": 0
 }
 layout/end_behaviour=0
-layout/styles={
-"Default": {
-"export_overrides": {},
-"inherits": "",
-"layout": "res://dialogue_layout.tscn"
-}
-}
 layout/default_style="Default"
 text/letter_speed=0.02
 animations/join_default="Instant In"
@@ -93,7 +86,7 @@ directories/dch_directory={
 "enemy_ghost": "res://overworld/maps/town/enemy_ghost.dch",
 "fan_of_four": "res://overworld/maps/town/fan_of_four.dch",
 "ghost": "res://overworld/maps/forest/ghost.dch",
-"inn/warrior": "res://overworld/maps/inn/warrior.dch",
+"inn_warrior": "res://overworld/maps/inn/warrior.dch",
 "medic": "res://overworld/maps/inn/medic.dch",
 "monk": "res://overworld/maps/town/monk.dch",
 "quinn": "res://overworld/maps/inn/quinn.dch",
