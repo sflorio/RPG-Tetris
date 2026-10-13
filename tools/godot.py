@@ -3,15 +3,21 @@
     python tools/godot.py check                  parse every script, then boot the game headless
     python tools/godot.py shot [scene] [-f N]    play N frames and save the last one as a PNG
     python tools/godot.py run [scene]            play it in a window
+    python tools/godot.py map AREA               print an overworld area as text (headless)
+    python tools/godot.py walk STEPS             walk the player headless, report each step
 
 Anything after `--` is passed to the game as user arguments (OS.get_cmdline_user_args()), e.g.
     python tools/godot.py shot res://tools/sandbox/combat_sandbox.tscn -- --effect=Blind
 
-`check` exits non-zero on any parse error or any SCRIPT ERROR / ERROR the engine prints while the
-game boots. The leak report Godot prints at exit is not counted: it is there on a clean run too.
+`check` exits non-zero on any parse error, any SCRIPT ERROR / ERROR the engine prints while the
+game boots, or any error from tools/check_content.py. The leak report Godot prints at exit is not
+counted: it is there on a clean run too.
 
 `shot` uses Movie Maker mode, so frames are rendered at a fixed 30 fps however slow the machine
 is, and the result is the same every time. It needs a window, so it cannot run headless.
+
+`map` and `walk` drive tools/sandbox/field_sandbox.tscn; see that script for --spawn, --set and
+the step letters. `walk u,u,l -- --spawn=Kitchen` passes the extra arguments through.
 
 Godot is found through $GODOT, then the 4.7.2 console build at C:\\, then `godot` on PATH.
 """
@@ -77,8 +83,10 @@ def check(args):
     if found:
         print("\n".join(found))
         return 1
-    print("boot: clean")
-    return 0
+    print("boot: clean", flush=True)
+
+    # Content last: a dialogue mistake should not hide a script error, and vice versa.
+    return subprocess.call([sys.executable, os.path.join(ROOT, "tools", "check_content.py")])
 
 
 def shot(args):
@@ -103,6 +111,39 @@ def shot(args):
     return 0
 
 
+FIELD = "res://tools/sandbox/field_sandbox.tscn"
+
+
+def field(sandbox_args):
+    """Runs the field sandbox headless; prints its output without the engine's own chatter."""
+    code, lines = call(["--headless", FIELD, "--", *sandbox_args])
+    # Map rows are indented too, so an indented line only belongs to an error block when it
+    # directly follows one.
+    in_problem = False
+    for line in lines:
+        if PROBLEM.match(line) or NOISE.search(line):
+            in_problem = True
+        elif in_problem and line.startswith(("   at:", "   GDScript", "       [")):
+            continue
+        else:
+            in_problem = False
+            if line.strip() and not line.startswith("Godot Engine"):
+                print(line)
+    found = problems(lines)
+    if found:
+        print("\n".join(found))
+    return 1 if code or found else 0
+
+
+def map_(args):
+    return field(["--map=" + args.area])
+
+
+def walk(args):
+    user = [a for a in args.user if a != "--"]
+    return field(["--walk=" + args.steps, "--quit", *user])
+
+
 def run(args):
     scene = [args.scene] if args.scene else []
     return subprocess.call([godot(), "--path", ROOT, *scene, *args.user])
@@ -121,6 +162,14 @@ def main():
     p.add_argument("-f", "--frames", type=int, default=90, help="frames to play first (90)")
     p.add_argument("-o", "--out", default=os.path.join(ROOT, ".godot", "shot.png"))
     p.set_defaults(func=shot)
+
+    p = sub.add_parser("map", help="print an overworld area as a character grid")
+    p.add_argument("area", help="Town, StorageAttic, Kitchen, MainHall, House or Forest")
+    p.set_defaults(func=map_)
+
+    p = sub.add_parser("walk", help="walk the player headless and report where each step lands")
+    p.add_argument("steps", help="comma-separated u d l r x w, e.g. l,l,d,x")
+    p.set_defaults(func=walk)
 
     p = sub.add_parser("run", help="play in a window")
     p.add_argument("scene", nargs="?")

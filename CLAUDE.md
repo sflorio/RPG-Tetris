@@ -9,17 +9,30 @@ combat, `DESIGN_ALIGNMENT.md` for what is built against the design and what is s
 Godot is at `C:\Godot_v4.7.2-stable_win64_console.exe` (also `$GODOT`). Use the wrapper:
 
 ```bash
-python tools/godot.py check                    # parse all scripts + boot the game headless (~15s)
-python tools/godot.py shot                     # last of 90 frames of the main scene -> .godot/shot.png
+python tools/godot.py check                    # scripts + headless boot + content check (~20s)
+python tools/godot.py map MainHall             # an area as a text grid: walls, NPCs, doorways
+python tools/godot.py walk l,l,d,x -- --spawn=Kitchen   # walk headless, report each step's cell
+python tools/godot.py shot res://tools/sandbox/field_sandbox.tscn -f 120 -- --spawn=Quinn --walk=x
 python tools/godot.py shot res://tools/sandbox/combat_sandbox.tscn -f 120   # straight into a battle
 python tools/godot.py run [scene]              # windowed, for the user to play
+python tools/check_content.py [-v]             # dialogue/content only (part of `check`)
 ```
 
 - A PostToolUse hook parse-checks the whole project after every `.gd` edit and reports errors
   back. A clean check is silent.
 - After any visual change, take a `shot` and **look at the PNG** before saying it works.
-- The sandbox takes user args after `--`: `--arena=res://...tscn` for another encounter,
+- **Reach for `map` before a screenshot** when the question is about layout, reachability or
+  where something is: it is text, exact, and far cheaper than an image.
+- **Field sandbox** (`tools/sandbox/field_sandbox.tscn`) is the real overworld minus the Opening.
+  After `--`: `--spawn=` an area (Town StorageAttic Kitchen MainHall House Forest), a gamepiece
+  name (lands beside it, facing it) or `x,y`; `--walk=` steps `u d l r` / `x` interact / `w` wait;
+  `--set=Var=Value` sets a Dialogic variable first (story state, e.g. `Chapter1Stage=2`).
+  Doorways are taken like in play, so `walk` is how to prove a route works.
+- A `shot` must cover the walk: roughly 12 frames per step, 45 per doorway, 15 after an `x`.
+- **Combat sandbox** takes `--arena=res://...tscn` for another encounter and
   `--effect=Blind[:tier]` (repeatable) to start with a status effect on the first ally.
+- `check_content.py` reads timelines, characters, Dialogic variables, signals and every `res://`
+  path. A speaker that resolves to a same-named character in another folder is an error.
 - `scn/Main.tscn` on its own floods "InputMap action tetris_* doesn't exist": its actions are only
   registered by `TetrisControls` when a real battle starts. Use the combat sandbox instead.
 - Never run Godot with `-e` or `--import`: editor mode reopens scenes and re-saves files.

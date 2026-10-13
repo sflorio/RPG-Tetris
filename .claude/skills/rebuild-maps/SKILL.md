@@ -36,8 +36,12 @@ python tools/render_oryx.py .godot/preview   # .godot/preview_town.png, _house.p
 - `check_maps.py` failing means a cell became blocked or a doorway/NPC is unreachable. Fix the
   painting rules; don't loosen the check.
 - **Look at the rendered PNGs** (Read them) before saying the map is right.
-- The game opens on a name prompt, so a `shot` of the main scene cannot reach the maps. Say
-  what you could not verify in-game rather than claiming it.
+- `python tools/godot.py map <Area>` shows what the game's pathfinder actually loaded: blocked
+  cells, NPCs, interactions, and each doorway with where it lands. Compare it to what you meant.
+- Walk any route you changed: `python tools/godot.py walk l,l,d -- --spawn=Kitchen`. A step
+  reported `blocked`, or a doorway that lands in the wrong area, is a failure.
+- Screenshot the room: `python tools/godot.py shot res://tools/sandbox/field_sandbox.tscn -f 60
+  -- --spawn=<Area>`, and Read the PNG.
 
 ## 3. Report
 
